@@ -1,30 +1,72 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:quizin_app/core/network/api_exception.dart';
+import 'package:quizin_app/services/mock/mock_backend.dart';
 
-import 'package:mobile/main.dart';
-
+/// Menguji aturan bisnis pada MockBackend (meniru aturan server).
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  Future<MockBackend> loggedIn() async {
+    final b = MockBackend();
+    await b.login('demo@quizin.test', 'password123');
+    return b;
+  }
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+  Future<int> playAll(MockBackend b, int moduleId) async {
+    final a = await b.startAttempt(moduleId);
+    for (final q in a.questions) {
+      await b.submitAnswer(a.attemptId, q.id, q.options.first.id);
+    }
+    await b.finish(a.attemptId);
+    return a.attemptId;
+  }
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+  test('modul 2 terkunci sampai modul 1 selesai', () async {
+    final b = await loggedIn();
+    expect(b.startAttempt(12), throwsA(isA<ApiException>()));
+    await playAll(b, 11);
+    final mods = await b.modules(1);
+    expect(mods[1].status, 'available');
+  });
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+  test('hadiah hanya sekali per modul', () async {
+    final b = await loggedIn();
+    final a1 = await b.startAttempt(11);
+    for (final q in a1.questions) {
+      await b.submitAnswer(a1.attemptId, q.id, q.options.first.id);
+    }
+    final r1 = await b.finish(a1.attemptId);
+    expect(r1.xpAwarded, r1.correctCount * 10);
+    expect(r1.coinsAwarded, r1.correctCount);
+    final xpAfterFirst = (await b.profile()).totalXp;
+
+    // finish dipanggil dua kali: hadiah tidak ganda
+    await b.finish(a1.attemptId);
+    expect((await b.profile()).totalXp, xpAfterFirst);
+
+    // ulang modul: tidak ada hadiah tambahan
+    final a2 = await b.startAttempt(11);
+    for (final q in a2.questions) {
+      await b.submitAnswer(a2.attemptId, q.id, q.options.first.id);
+    }
+    final r2 = await b.finish(a2.attemptId);
+    expect(r2.xpAwarded, 0);
+    expect((await b.profile()).totalXp, xpAfterFirst);
+  });
+
+  test('pembahasan hanya setelah kuis selesai', () async {
+    final b = await loggedIn();
+    final a = await b.startAttempt(11);
+    expect(b.review(a.attemptId), throwsA(isA<ApiException>()));
+  });
+
+  test('pembelian karakter: saldo kurang ditolak, tidak bisa beli dua kali', () async {
+    final b = MockBackend();
+    await b.register(
+        name: 'Baru', email: 'baru@quizin.test', phone: '+620000', password: 'password123');
+    expect(b.purchase(2), throwsA(isA<ApiException>()));
+
+    final demo = await loggedIn();
+    await demo.purchase(2);
+    expect(demo.purchase(2), throwsA(isA<ApiException>()));
+    expect((await demo.profile()).coins, 50);
   });
 }
