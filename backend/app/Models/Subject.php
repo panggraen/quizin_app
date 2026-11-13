@@ -32,6 +32,11 @@ class Subject extends Model
         return $this->belongsTo(Category::class, 'category_id');
     }
 
+    public function quizModules(): HasMany
+    {
+        return $this->hasMany(QuizModule::class, 'subject_id')->orderBy('module_number');
+    }
+
     public function materials(): HasMany
     {
         return $this->hasMany(Material::class, 'subject_id');

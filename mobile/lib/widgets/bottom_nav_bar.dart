@@ -1,20 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:quizin_app/core/theme/app_colors.dart';
 
+/// Daftar tab navigasi, dipakai bersama oleh nav bawah (HP) dan nav atas (web).
+const appNavItems = <(IconData, String)>[
+  (Icons.home_rounded, 'Home'),
+  (Icons.menu_book_rounded, 'Materi'),
+  (Icons.sports_esports_rounded, 'Play'),
+  (Icons.emoji_events_rounded, 'Progress'),
+  (Icons.person_rounded, 'Profil'),
+];
+
 /// Navigasi bawah 5 tab: Home, Materi, Play (tengah), Progress, Profil.
 class AppBottomNav extends StatelessWidget {
   const AppBottomNav({super.key, required this.index, required this.onSelect});
 
   final int index;
   final ValueChanged<int> onSelect;
-
-  static const _items = [
-    (Icons.home_rounded, 'Home'),
-    (Icons.menu_book_rounded, 'Materi'),
-    (Icons.sports_esports_rounded, 'Play'),
-    (Icons.emoji_events_rounded, 'Progress'),
-    (Icons.person_rounded, 'Profil'),
-  ];
 
   @override
   Widget build(BuildContext context) {
@@ -26,18 +27,27 @@ class AppBottomNav extends StatelessWidget {
       ),
       child: SafeArea(
         top: false,
-        child: SizedBox(
-          height: 64,
-          child: Row(
-            children: [
-              for (var i = 0; i < _items.length; i++)
-                Expanded(
-                  child: InkWell(
-                    onTap: () => onSelect(i),
-                    child: i == 2 ? _playItem(i) : _item(context, i),
-                  ),
-                ),
-            ],
+        // Latar bilah selalu selebar layar; tab-nya dibatasi supaya tidak
+        // meregang di tablet.
+        child: Align(
+          alignment: Alignment.topCenter,
+          heightFactor: 1,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 560),
+            child: SizedBox(
+              height: 64,
+              child: Row(
+                children: [
+                  for (var i = 0; i < appNavItems.length; i++)
+                    Expanded(
+                      child: InkWell(
+                        onTap: () => onSelect(i),
+                        child: i == 2 ? _playItem(i) : _item(context, i),
+                      ),
+                    ),
+                ],
+              ),
+            ),
           ),
         ),
       ),
@@ -50,8 +60,8 @@ class AppBottomNav extends StatelessWidget {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Icon(_items[i].$1, color: color),
-        Text(_items[i].$2,
+        Icon(appNavItems[i].$1, color: color),
+        Text(appNavItems[i].$2,
             style: TextStyle(
                 fontSize: 11, color: color, fontWeight: selected ? FontWeight.w700 : FontWeight.w400)),
       ],
@@ -70,9 +80,9 @@ class AppBottomNav extends StatelessWidget {
             shape: BoxShape.circle,
             border: Border.all(color: Colors.white, width: 3),
           ),
-          child: Icon(_items[i].$1, color: Colors.white, size: 22),
+          child: Icon(appNavItems[i].$1, color: Colors.white, size: 22),
         ),
-        Text(_items[i].$2,
+        Text(appNavItems[i].$2,
             style: TextStyle(
                 fontSize: 11,
                 color: index == i ? AppColors.green : AppColors.muted,

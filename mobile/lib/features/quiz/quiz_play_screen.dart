@@ -56,7 +56,11 @@ class QuizPlayScreen extends StatelessWidget {
     final quiz = context.watch<QuizProvider>();
     final attempt = quiz.attempt;
     if (attempt == null) {
-      return const ScreenScaffold(title: 'Kuis', child: LoadingWidget());
+      return const ScreenScaffold(
+        title: 'Kuis',
+        showTopNav: false,
+        child: LoadingWidget(),
+      );
     }
     final question = quiz.currentQuestion;
     final total = attempt.questions.length;
@@ -71,6 +75,7 @@ class QuizPlayScreen extends StatelessWidget {
       },
       child: ScreenScaffold(
         title: 'Kuis',
+        showTopNav: false,
         child: ListView(
           padding: const EdgeInsets.only(bottom: 24),
           children: [
@@ -102,14 +107,12 @@ class QuizPlayScreen extends StatelessWidget {
                 ),
               ),
             if (answered) ...[
-              Text(
-                quiz.lastResult!.isCorrect
-                    ? 'Benar! ${quiz.lastResult!.explanation}'
-                    : 'Kurang tepat. ${quiz.lastResult!.explanation}',
-                style: TextStyle(
-                  fontSize: 13,
-                  color: quiz.lastResult!.isCorrect ? AppColors.green : AppColors.red,
-                ),
+              _FeedbackCard(
+                isCorrect: quiz.lastResult!.isCorrect,
+                explanation: quiz.lastResult!.explanation,
+                chosenExplanation: quiz.lastResult!.chosenExplanation,
+                chosen: _optionById(question, quiz.selectedOptionId),
+                correct: _optionById(question, quiz.lastResult!.correctOptionId),
               ),
               const SizedBox(height: 16),
               Center(
@@ -125,6 +128,110 @@ class QuizPlayScreen extends StatelessWidget {
             ],
           ],
         ),
+      ),
+    );
+  }
+}
+
+OptionModel? _optionById(QuestionModel q, int? id) {
+  for (final o in q.options) {
+    if (o.id == id) return o;
+  }
+  return null;
+}
+
+/// Kotak umpan balik setelah menjawab: status benar/salah, jawaban yang
+/// dipilih dan jawaban yang benar, lalu pembahasan lengkap.
+class _FeedbackCard extends StatelessWidget {
+  const _FeedbackCard({
+    required this.isCorrect,
+    required this.explanation,
+    required this.chosenExplanation,
+    required this.chosen,
+    required this.correct,
+  });
+
+  final bool isCorrect;
+  final String explanation;
+  final String chosenExplanation;
+  final OptionModel? chosen;
+  final OptionModel? correct;
+
+  @override
+  Widget build(BuildContext context) {
+    final accent = isCorrect ? AppColors.green : AppColors.red;
+    final bg = Color.alphaBlend(accent.withValues(alpha: 0.10), AppColors.surface(context));
+    final textColor = AppColors.text(context);
+
+    Widget answerRow(String label, OptionModel? o, Color color) {
+      if (o == null) return const SizedBox.shrink();
+      return Padding(
+        padding: const EdgeInsets.only(top: 6),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('$label ', style: TextStyle(fontSize: 13, color: AppColors.muted)),
+            Expanded(
+              child: Text('${o.label}. ${o.text}',
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: color)),
+            ),
+          ],
+        ),
+      );
+    }
+
+    Widget section(String title, String body, Color color) {
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(title,
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: color)),
+            const SizedBox(height: 4),
+            Text(body, style: TextStyle(fontSize: 14, height: 1.5, color: textColor)),
+          ],
+        ),
+      );
+    }
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: accent, width: 1.4),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(isCorrect ? Icons.check_circle : Icons.cancel, color: accent, size: 26),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  isCorrect ? 'Jawabanmu benar!' : 'Jawabanmu kurang tepat',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: accent),
+                ),
+              ),
+            ],
+          ),
+          if (!isCorrect) answerRow('Jawabanmu:', chosen, AppColors.red),
+          answerRow(isCorrect ? 'Jawaban:' : 'Jawaban yang benar:', correct, AppColors.green),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            child: Divider(height: 1, color: accent.withValues(alpha: 0.35)),
+          ),
+          if (!isCorrect && chosenExplanation.isNotEmpty)
+            section('Kenapa jawabanmu salah', chosenExplanation, AppColors.red),
+          section(
+            isCorrect ? 'Kenapa jawabanmu benar' : 'Kenapa ini jawaban yang benar',
+            explanation,
+            AppColors.green,
+          ),
+        ],
       ),
     );
   }
@@ -184,6 +291,10 @@ class _OptionTile extends StatelessWidget {
               ),
               const SizedBox(width: 10),
               Expanded(child: Text(option.text, style: TextStyle(color: text))),
+              if (revealed && option.id == correctId)
+                const Icon(Icons.check_circle, color: AppColors.green, size: 20)
+              else if (revealed && isSelected)
+                const Icon(Icons.cancel, color: AppColors.red, size: 20),
             ],
           ),
         ),

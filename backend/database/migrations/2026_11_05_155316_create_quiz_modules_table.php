@@ -1,4 +1,3 @@
-
 <?php
 
 use Illuminate\Database\Migrations\Migration;
@@ -12,9 +11,16 @@ return new class extends Migration
         Schema::create('quiz_modules', function (Blueprint $table) {
             $table->id();
 
-            $table->foreignId('material_id')
-                ->constrained('materials')
+            // Modul milik bidang (subject): Biologi -> modul 1..N.
+            $table->foreignId('subject_id')
+                ->constrained('subjects')
                 ->restrictOnDelete();
+
+            // Materi terkait (opsional, untuk tombol "Baca Materi").
+            $table->foreignId('material_id')
+                ->nullable()
+                ->constrained('materials')
+                ->nullOnDelete();
 
             $table->string('title', 150);
             $table->text('description')->nullable();
@@ -23,7 +29,7 @@ return new class extends Migration
             $table->timestamp('published_at')->nullable();
             $table->timestamps();
 
-            $table->unique(['material_id', 'module_number']);
+            $table->unique(['subject_id', 'module_number']);
         });
     }
 

@@ -101,7 +101,7 @@ class _MaterialDetailScreenState extends State<MaterialDetailScreen> {
               ],
               SecondaryButton(
                 label: 'Uji Pemahaman',
-                onPressed: d.allDone ? () => pushScreen(context, ModuleListScreen(material: m)) : null,
+                onPressed: d.allDone ? () => pushScreen(context, ModuleListScreen(subject: widget.subject)) : null,
               ),
               const SizedBox(height: 10),
               PrimaryButton(

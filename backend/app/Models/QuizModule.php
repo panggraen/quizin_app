@@ -11,6 +11,7 @@ class QuizModule extends Model
     protected $table = 'quiz_modules';
 
     protected $fillable = [
+        'subject_id',
         'material_id',
         'title',
         'description',
@@ -26,6 +27,11 @@ class QuizModule extends Model
             'is_published' => 'boolean',
             'published_at' => 'datetime',
         ];
+    }
+
+    public function subject(): BelongsTo
+    {
+        return $this->belongsTo(Subject::class, 'subject_id');
     }
 
     public function material(): BelongsTo

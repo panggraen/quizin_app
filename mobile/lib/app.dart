@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:quizin_app/core/navigation/shell_nav.dart';
 import 'package:quizin_app/core/routes/app_routes.dart';
 import 'package:quizin_app/core/theme/app_theme.dart';
 import 'package:quizin_app/providers/auth_provider.dart';
@@ -26,6 +27,7 @@ class QuizinApp extends StatelessWidget {
         ChangeNotifierProvider(create: (c) => QuizProvider(c.read<MockBackend>())),
         ChangeNotifierProvider(create: (c) => ShopProvider(c.read<MockBackend>())),
         ChangeNotifierProvider(create: (_) => SettingsProvider()),
+        ChangeNotifierProvider(create: (_) => ShellNav()),
       ],
       child: Consumer<SettingsProvider>(
         builder: (context, settings, _) => MaterialApp(
@@ -41,3 +43,4 @@ class QuizinApp extends StatelessWidget {
     );
   }
 }
+

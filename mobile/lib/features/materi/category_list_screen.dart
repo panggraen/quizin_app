@@ -7,6 +7,7 @@ import 'package:quizin_app/features/materi/subject_list_screen.dart';
 import 'package:quizin_app/models/category_model.dart';
 import 'package:quizin_app/providers/material_provider.dart';
 import 'package:quizin_app/widgets/async_view.dart';
+import 'package:quizin_app/widgets/category_icon.dart';
 import 'package:quizin_app/widgets/character_avatar.dart';
 import 'package:quizin_app/widgets/nav_card.dart';
 import 'package:quizin_app/widgets/screen_scaffold.dart';
@@ -102,7 +103,7 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
                   child: NavCard(
                     title: cats[i].name,
                     subtitle: '${cats[i].materialsDone}/${cats[i].materialsTotal} materi',
-                    icon: categoryIcon(cats[i].name),
+                    leading: CategoryIcon(name: cats[i].name, size: 40),
                     accent: categoryColor(i),
                     onTap: () => pushScreen(context, SubjectListScreen(category: cats[i], mode: widget.mode)),
                   ),

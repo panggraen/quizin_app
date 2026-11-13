@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:quizin_app/core/theme/app_colors.dart';
 import 'package:quizin_app/models/character_model.dart';
-import 'package:quizin_app/widgets/character_avatar.dart';
+import 'package:quizin_app/widgets/cloud_mascot.dart';
 
 class CharacterCard extends StatelessWidget {
   const CharacterCard({
@@ -10,18 +10,25 @@ class CharacterCard extends StatelessWidget {
     required this.busy,
     required this.onBuy,
     required this.onUse,
+    this.onUnequip,
   });
 
   final CharacterModel character;
   final bool busy;
   final VoidCallback onBuy;
   final VoidCallback onUse;
+  final VoidCallback? onUnequip;
 
   @override
   Widget build(BuildContext context) {
     final c = character;
     Widget action;
-    if (c.isActive) {
+    if (c.isActive && !c.isDefault && onUnequip != null) {
+      action = OutlinedButton(
+        onPressed: busy ? null : onUnequip,
+        child: const Text('Lepas'),
+      );
+    } else if (c.isActive) {
       action = const Chip(label: Text('Dipakai'), avatar: Icon(Icons.check, size: 16));
     } else if (c.isOwned) {
       action = FilledButton(
@@ -45,7 +52,10 @@ class CharacterCard extends StatelessWidget {
       ),
       child: Row(
         children: [
-          CharacterAvatar(characterId: c.id, size: 72),
+          SizedBox(
+            width: 96,
+            child: Center(child: CloudMascot(size: 72, accessoryId: c.id)),
+          ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
