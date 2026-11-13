@@ -11,8 +11,8 @@ import 'package:quizin_app/widgets/async_view.dart';
 import 'package:quizin_app/widgets/nav_card.dart';
 import 'package:quizin_app/widgets/screen_scaffold.dart';
 
-/// Langkah 3 alur: Materi (topik) dalam satu bidang.
-/// Mode materi -> baca materi. Mode kuis -> daftar modul kuis materi itu.
+/// Langkah 3 alur Materi: topik dalam satu bidang -> baca materi.
+/// (Alur Kuis tidak lewat sini: bidang langsung membuka daftar modul.)
 class MaterialListScreen extends StatefulWidget {
   const MaterialListScreen({super.key, required this.subject, required this.mode});
 
@@ -37,7 +37,7 @@ class _MaterialListScreenState extends State<MaterialListScreen> {
   void _open(MaterialModel m) {
     final screen = widget.mode == FlowMode.materi
         ? MaterialDetailScreen(materialId: m.id, subject: widget.subject)
-        : ModuleListScreen(material: m);
+        : ModuleListScreen(subject: widget.subject);
     Navigator.of(context).push(MaterialPageRoute(builder: (_) => screen)).then((_) {
       if (mounted) setState(_load);
     });

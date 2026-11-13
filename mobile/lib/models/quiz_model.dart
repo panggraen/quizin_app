@@ -3,6 +3,7 @@ import 'package:quizin_app/models/question_model.dart';
 
 class QuizModuleModel {
   final int id;
+  final int subjectId;
   final int materialId;
   final int moduleNumber;
   final String title;
@@ -13,6 +14,7 @@ class QuizModuleModel {
 
   const QuizModuleModel({
     required this.id,
+    required this.subjectId,
     required this.materialId,
     required this.moduleNumber,
     required this.title,
@@ -25,6 +27,7 @@ class QuizModuleModel {
 
   factory QuizModuleModel.fromJson(Map<String, dynamic> j) => QuizModuleModel(
         id: toInt(j['id']),
+        subjectId: toInt(j['subject_id']),
         materialId: toInt(j['material_id']),
         moduleNumber: toInt(j['module_number']),
         title: j['title'] as String? ?? '',
@@ -50,18 +53,26 @@ class AttemptModel {
 class AnswerResultModel {
   final bool isCorrect;
   final int correctOptionId;
+
+  /// Alasan kenapa jawaban yang BENAR itu benar.
   final String explanation;
+
+  /// Alasan kenapa pilihan yang DIPILIH pengguna benar/salah
+  /// (kosong jika server tidak mengirimnya).
+  final String chosenExplanation;
 
   const AnswerResultModel({
     required this.isCorrect,
     required this.correctOptionId,
     required this.explanation,
+    this.chosenExplanation = '',
   });
 
   factory AnswerResultModel.fromJson(Map<String, dynamic> j) => AnswerResultModel(
         isCorrect: toBool(j['is_correct']),
         correctOptionId: toInt(j['correct_option_id']),
         explanation: j['explanation'] as String? ?? '',
+        chosenExplanation: j['chosen_explanation'] as String? ?? '',
       );
 }
 
@@ -97,6 +108,31 @@ class AttemptResultModel {
       );
 }
 
+/// Satu pilihan jawaban di halaman pembahasan, lengkap dengan alasannya.
+class ReviewOptionModel {
+  final String label;
+  final String text;
+  final bool isCorrect;
+  final bool isChosen;
+  final String reason;
+
+  const ReviewOptionModel({
+    required this.label,
+    required this.text,
+    required this.isCorrect,
+    required this.isChosen,
+    this.reason = '',
+  });
+
+  factory ReviewOptionModel.fromJson(Map<String, dynamic> j) => ReviewOptionModel(
+        label: j['label'] as String? ?? '',
+        text: j['text'] as String? ?? '',
+        isCorrect: toBool(j['is_correct']),
+        isChosen: toBool(j['is_chosen']),
+        reason: j['reason'] as String? ?? '',
+      );
+}
+
 class ReviewItemModel {
   final int number;
   final String question;
@@ -105,6 +141,9 @@ class ReviewItemModel {
   final bool isCorrect;
   final String explanation;
 
+  /// Semua pilihan A..D beserta alasan masing-masing (boleh kosong).
+  final List<ReviewOptionModel> options;
+
   const ReviewItemModel({
     required this.number,
     required this.question,
@@ -112,6 +151,7 @@ class ReviewItemModel {
     required this.correctAnswer,
     required this.isCorrect,
     required this.explanation,
+    this.options = const [],
   });
 
   factory ReviewItemModel.fromJson(Map<String, dynamic> j) => ReviewItemModel(
@@ -121,5 +161,8 @@ class ReviewItemModel {
         correctAnswer: j['correct_answer'] as String? ?? '',
         isCorrect: toBool(j['is_correct']),
         explanation: j['explanation'] as String? ?? '',
+        options: (j['options'] as List<dynamic>? ?? [])
+            .map((o) => ReviewOptionModel.fromJson(o as Map<String, dynamic>))
+            .toList(),
       );
 }

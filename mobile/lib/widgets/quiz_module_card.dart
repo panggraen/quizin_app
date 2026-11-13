@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:quizin_app/core/theme/app_colors.dart';
 import 'package:quizin_app/models/quiz_model.dart';
 
-/// Lingkaran nomor modul dengan status: tersedia, terkunci, selesai.
 class QuizModuleCard extends StatelessWidget {
   const QuizModuleCard({super.key, required this.module, required this.selected, required this.onTap});
 

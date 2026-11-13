@@ -12,7 +12,8 @@ import 'package:quizin_app/models/user_model.dart';
 import 'package:quizin_app/providers/material_provider.dart';
 import 'package:quizin_app/providers/profile_provider.dart';
 import 'package:quizin_app/widgets/async_view.dart';
-import 'package:quizin_app/widgets/character_avatar.dart';
+import 'package:quizin_app/widgets/category_icon.dart';
+import 'package:quizin_app/widgets/cloud_mascot.dart';
 import 'package:quizin_app/widgets/primary_button.dart';
 import 'package:quizin_app/widgets/screen_scaffold.dart';
 import 'package:quizin_app/widgets/state_widgets.dart';
@@ -27,6 +28,18 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  /// Satu kolom di semua ukuran layar, lebar maksimal [_maxWidth].
+  /// HP: kategori satu baris geser. Layar lebar (>= [_gridBreakpoint]):
+  /// kategori jadi grid.
+  static const double _maxWidth = 760;
+  static const double _gridBreakpoint = 560;
+
+  // Ukuran kartu kategori
+  static const double _tileHeight = 128; // tinggi kartu
+  static const double _tileMaxWidth = 150; // lebar maksimal kartu (web)
+  static const double _tilePhoneWidth = 108; // lebar kartu (HP)
+  static const double _categoryIconSize = 60; // ukuran gambar kategori
+
   late Future<List<CategoryModel>> _categories;
 
   @override
@@ -42,172 +55,338 @@ class _HomeScreenState extends State<HomeScreen> {
     if (u == null) {
       return ScreenScaffold(
         showBack: false,
-        child: p.error != null ? ErrorStateWidget(message: p.error!, onRetry: p.load) : const LoadingWidget(),
+        child: p.error != null
+            ? ErrorStateWidget(message: p.error!, onRetry: p.load)
+            : const LoadingWidget(),
       );
     }
+
+    final textScale =
+        MediaQuery.textScalerOf(context).scale(1.0).clamp(1.0, 1.6).toDouble();
+
     return ScreenScaffold(
       showBack: false,
-      child: ListView(
-        padding: const EdgeInsets.only(top: 16, bottom: 24),
-        children: [
-          _hero(u),
-          const SizedBox(height: 14),
-          PrimaryButton(label: 'MAIN SEKARANG', color: AppColors.primary, onPressed: widget.onPlay),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              _shortcut(Icons.emoji_events, 'Peringkat', () => pushScreen(context, const LeaderboardScreen())),
-              const SizedBox(width: 10),
-              _shortcut(Icons.storefront, 'Toko', () => pushScreen(context, const ShopScreen())),
-              const SizedBox(width: 10),
-              _shortcut(Icons.settings, 'Pengaturan', () => pushScreen(context, const SettingsScreen())),
-            ],
-          ),
-          const SizedBox(height: 20),
-          Text('Ringkasan belajar',
-              style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16, color: AppColors.text(context))),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              Expanded(child: StatBox(value: '${u.materialsCompleted}', label: 'Materi selesai', icon: Icons.menu_book, iconColor: AppColors.primary)),
-              const SizedBox(width: 10),
-              Expanded(child: StatBox(value: '${u.modulesCompleted}', label: 'Modul selesai', icon: Icons.check_circle, iconColor: AppColors.green)),
-            ],
-          ),
-          const SizedBox(height: 20),
-          Text('Belajar dulu yuk',
-              style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16, color: AppColors.text(context))),
-          const SizedBox(height: 8),
-          SizedBox(
-            height: 110,
-            child: AsyncView<List<CategoryModel>>(
-              future: _categories,
-              onRetry: () => setState(() => _categories = context.read<MaterialProvider>().categories()),
-              builder: (context, cats) => ListView.separated(
-                scrollDirection: Axis.horizontal,
-                itemCount: cats.length,
-                separatorBuilder: (context, index) => const SizedBox(width: 10),
-                itemBuilder: (context, i) => _categoryTile(context, cats[i], i),
+      maxWidth: _maxWidth,
+      padding: EdgeInsets.zero,
+      child: LayoutBuilder(
+        builder: (context, c) {
+          final wide = c.maxWidth >= _gridBreakpoint;
+
+          // Sapaan, tombol main, pintasan.
+          final top = <Widget>[
+            _hero(u),
+            const SizedBox(height: 14),
+            PrimaryButton(
+              label: 'MAIN SEKARANG',
+              color: AppColors.primary,
+              onPressed: widget.onPlay,
+            ),
+            const SizedBox(height: 12),
+            _shortcuts(),
+          ];
+
+          // Ringkasan dan kategori.
+          final rest = <Widget>[
+            _sectionTitle('Ringkasan belajar'),
+            Row(
+              children: [
+                Expanded(
+                  child: StatBox(
+                    value: '${u.materialsCompleted}',
+                    label: 'Materi selesai',
+                    icon: Icons.menu_book,
+                    iconColor: AppColors.primary,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: StatBox(
+                    value: '${u.modulesCompleted}',
+                    label: 'Modul selesai',
+                    icon: Icons.check_circle,
+                    iconColor: AppColors.green,
+                  ),
+                ),
+              ],
+            ),
+            _sectionTitle('Belajar dulu yuk'),
+            ConstrainedBox(
+              constraints: BoxConstraints(minHeight: _tileHeight * textScale),
+              child: AsyncView<List<CategoryModel>>(
+                future: _categories,
+                onRetry: () => setState(() {
+                  _categories = context.read<MaterialProvider>().categories();
+                }),
+                builder: (context, cats) => wide
+                    ? _categoryGrid(cats, textScale)
+                    : _categoryRow(cats, textScale),
               ),
             ),
-          ),
-        ],
+          ];
+
+          const padding = EdgeInsets.fromLTRB(
+            AppSizes.screenPadding,
+            16,
+            AppSizes.screenPadding,
+            24,
+          );
+
+          return Align(
+            alignment: Alignment.topCenter,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: _maxWidth),
+              child: ListView(
+                padding: padding,
+                children: [...top, ...rest],
+              ),
+            ),
+          );
+        },
       ),
     );
   }
 
-  Widget _hero(UserModel u) {
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(colors: [AppColors.primary, Color(0xFF3B82F6)]),
-        borderRadius: BorderRadius.circular(24),
+  /// HP: satu baris yang bisa digeser ke samping.
+  Widget _categoryRow(List<CategoryModel> cats, double textScale) {
+    return SizedBox(
+      height: _tileHeight * textScale,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        itemCount: cats.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 10),
+        itemBuilder: (context, i) =>
+            _categoryTile(context, cats[i], i, width: _tilePhoneWidth),
       ),
-      child: Column(
-        children: [
-          Row(
+    );
+  }
+
+  /// Web: grid rata kiri, kartu otomatis menyesuaikan lebar.
+  Widget _categoryGrid(List<CategoryModel> cats, double textScale) {
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: cats.length,
+      gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+        maxCrossAxisExtent: _tileMaxWidth,
+        mainAxisExtent: _tileHeight * textScale,
+        crossAxisSpacing: 10,
+        mainAxisSpacing: 10,
+      ),
+      itemBuilder: (context, i) => _categoryTile(context, cats[i], i),
+    );
+  }
+
+  Widget _shortcuts() {
+    return Row(
+      children: [
+        _shortcut(Icons.emoji_events, 'Peringkat',
+            () => pushScreen(context, const LeaderboardScreen())),
+        const SizedBox(width: 10),
+        _shortcut(Icons.storefront, 'Toko',
+            () => pushScreen(context, const ShopScreen())),
+        const SizedBox(width: 10),
+        _shortcut(Icons.settings, 'Pengaturan',
+            () => pushScreen(context, const SettingsScreen())),
+      ],
+    );
+  }
+
+  Widget _sectionTitle(String text, {double top = 22}) {
+    return Padding(
+      padding: EdgeInsets.only(top: top, bottom: 8),
+      child: Text(
+        text,
+        style: TextStyle(
+          fontWeight: FontWeight.w700,
+          fontSize: 16,
+          color: AppColors.text(context),
+        ),
+      ),
+    );
+  }
+
+  ShapeBorder _cardShape() => RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppSizes.radius),
+        side: const BorderSide(color: Colors.black12),
+      );
+
+  Widget _hero(UserModel u) {
+    final xp = u.xpInLevel;
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.primary,
+        borderRadius: BorderRadius.circular(AppSizes.radius),
+      ),
+      child: LayoutBuilder(
+        builder: (context, c) {
+          final avatar = (c.maxWidth * 0.3).clamp(84.0, 128.0).toDouble();
+
+          return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Hai, ${u.name}!',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.w800)),
-                    const Text('Siap belajar hari ini?', style: TextStyle(color: Colors.white70)),
-                  ],
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Hai, ${u.name}!',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 22,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        const Text(
+                          'Siap belajar hari ini?',
+                          style: TextStyle(color: Colors.white70),
+                        ),
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            const Icon(Icons.monetization_on,
+                                size: 18, color: AppColors.yellow),
+                            const SizedBox(width: 6),
+                            Text(
+                              '${u.coins} koin',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  CloudMascot(
+                    size: avatar,
+                    accessoryId: u.activeCharacterId,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 14),
+              Row(
+                children: [
+                  Text(
+                    'LEVEL ${u.level}',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const Spacer(),
+                  Text(
+                    '$xp / 100 XP',
+                    style: const TextStyle(color: Colors.white70, fontSize: 12),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 6),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: LinearProgressIndicator(
+                  value: (xp / 100).clamp(0.0, 1.0).toDouble(),
+                  minHeight: 8,
+                  backgroundColor: Colors.white24,
+                  color: AppColors.yellow,
                 ),
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(12)),
-                child: Row(mainAxisSize: MainAxisSize.min, children: [
-                  const Icon(Icons.monetization_on, size: 16, color: AppColors.yellow),
-                  const SizedBox(width: 4),
-                  Text('${u.coins}', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
-                ]),
+              const SizedBox(height: 6),
+              Text(
+                '${100 - xp} XP lagi menuju Level ${u.level + 1}',
+                style: const TextStyle(color: Colors.white70, fontSize: 11),
               ),
             ],
-          ),
-          const SizedBox(height: 8),
-          CharacterAvatar(characterId: u.activeCharacterId, size: 130),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              const Icon(Icons.shield, size: 16, color: AppColors.yellow),
-              const SizedBox(width: 4),
-              Text('LEVEL ${u.level}', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
-              const Spacer(),
-              Text('${u.xpInLevel} / 100 XP', style: const TextStyle(color: Colors.white70, fontSize: 12)),
-            ],
-          ),
-          const SizedBox(height: 6),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: LinearProgressIndicator(
-              value: u.xpInLevel / 100,
-              minHeight: 8,
-              backgroundColor: Colors.white24,
-              color: AppColors.yellow,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Align(
-            alignment: Alignment.centerLeft,
-            child: Text('${100 - u.xpInLevel} XP lagi menuju Level ${u.level + 1}',
-                style: const TextStyle(color: Colors.white70, fontSize: 11)),
-          ),
-        ],
+          );
+        },
       ),
     );
   }
 
   Widget _shortcut(IconData icon, String label, VoidCallback onTap) {
+    final radius = BorderRadius.circular(AppSizes.radius);
+
     return Expanded(
       child: Material(
-        color: AppColors.yellow,
-        borderRadius: BorderRadius.circular(14),
+        color: AppColors.surface(context),
+        shape: _cardShape(),
         child: InkWell(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: radius,
           onTap: onTap,
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 12),
-            child: Column(children: [
-              Icon(icon, color: AppColors.navy),
-              const SizedBox(height: 4),
-              Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.navy)),
-            ]),
+            child: Column(
+              children: [
+                Icon(icon, color: AppColors.primary),
+                const SizedBox(height: 4),
+                Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.text(context),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
     );
   }
 
-  Widget _categoryTile(BuildContext context, CategoryModel c, int i) {
-    final color = categoryColor(i);
-    return InkWell(
-      borderRadius: BorderRadius.circular(14),
-      onTap: () => pushScreen(context, SubjectListScreen(category: c, mode: FlowMode.materi)),
-      child: Container(
-        width: 100,
-        padding: const EdgeInsets.all(10),
-        decoration: BoxDecoration(
-          color: AppColors.surface(context),
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: color),
+  /// [width] null = tile mengisi sel grid; diisi = lebar tetap (baris HP).
+  Widget _categoryTile(BuildContext context, CategoryModel c, int i,
+      {double? width}) {
+    final radius = BorderRadius.circular(AppSizes.radius);
+
+    return Material(
+      color: AppColors.surface(context),
+      shape: _cardShape(),
+      child: InkWell(
+        borderRadius: radius,
+        onTap: () => pushScreen(
+          context,
+          SubjectListScreen(category: c, mode: FlowMode.materi),
         ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(categoryIcon(c.name), color: color, size: 30),
-            const SizedBox(height: 6),
-            Text(c.name,
-                textAlign: TextAlign.center,
-                style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: AppColors.text(context))),
-            Text('${c.materialsTotal} materi', style: const TextStyle(fontSize: 11, color: AppColors.muted)),
-          ],
+        child: SizedBox(
+          width: width,
+          child: Padding(
+            padding: const EdgeInsets.all(8),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                CategoryIcon(name: c.name, size: _categoryIconSize),
+                const SizedBox(height: 4),
+                Text(
+                  c.name,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 13,
+                    color: AppColors.text(context),
+                  ),
+                ),
+                Text(
+                  '${c.materialsTotal} materi',
+                  style: const TextStyle(fontSize: 11, color: AppColors.muted),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );

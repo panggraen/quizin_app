@@ -4,6 +4,7 @@ import 'package:quizin_app/core/constants/flow_mode.dart';
 import 'package:quizin_app/core/theme/app_colors.dart';
 import 'package:quizin_app/core/utils/helpers.dart';
 import 'package:quizin_app/features/materi/material_list_screen.dart';
+import 'package:quizin_app/features/quiz/module_list_screen.dart';
 import 'package:quizin_app/models/category_model.dart';
 import 'package:quizin_app/models/subject_model.dart';
 import 'package:quizin_app/providers/material_provider.dart';
@@ -12,6 +13,7 @@ import 'package:quizin_app/widgets/nav_card.dart';
 import 'package:quizin_app/widgets/screen_scaffold.dart';
 
 /// Langkah 2 alur: Bidang (subject) dalam satu kategori.
+/// Mode materi -> daftar materi. Mode kuis -> langsung daftar modul 1..N.
 class SubjectListScreen extends StatefulWidget {
   const SubjectListScreen({super.key, required this.category, required this.mode});
 
@@ -55,10 +57,16 @@ class _SubjectListScreenState extends State<SubjectListScreen> {
                 separatorBuilder: (context, index) => const SizedBox(height: 10),
                 itemBuilder: (context, i) => NavCard(
                   title: subjects[i].name,
-                  subtitle: '${subjects[i].materialsDone}/${subjects[i].materialsTotal} materi',
+                  subtitle: widget.mode == FlowMode.kuis
+                      ? 'Lihat modul kuis'
+                      : '${subjects[i].materialsDone}/${subjects[i].materialsTotal} materi',
                   icon: Icons.biotech,
                   onTap: () => pushScreen(
-                      context, MaterialListScreen(subject: subjects[i], mode: widget.mode)),
+                    context,
+                    widget.mode == FlowMode.kuis
+                        ? ModuleListScreen(subject: subjects[i])
+                        : MaterialListScreen(subject: subjects[i], mode: widget.mode),
+                  ),
                 ),
               ),
             ),

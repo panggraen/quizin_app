@@ -8,6 +8,7 @@ import 'package:quizin_app/features/shop/shop_screen.dart';
 import 'package:quizin_app/providers/profile_provider.dart';
 import 'package:quizin_app/providers/shop_provider.dart';
 import 'package:quizin_app/widgets/character_avatar.dart';
+import 'package:quizin_app/widgets/cloud_mascot.dart';
 import 'package:quizin_app/widgets/nav_card.dart';
 import 'package:quizin_app/widgets/screen_scaffold.dart';
 import 'package:quizin_app/widgets/state_widgets.dart';
@@ -83,7 +84,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               children: [
                 Row(
                   children: [
-                    CharacterAvatar(characterId: u.activeCharacterId, size: 84),
+                    CloudMascot(size: 84, accessoryId: u.activeCharacterId),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Column(
@@ -120,7 +121,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           const SizedBox(height: 18),
           Row(
             children: [
-              Text('Toko Karakter',
+              Text('Toko Aksesori',
                   style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16, color: AppColors.text(context))),
               const Spacer(),
               TextButton(
@@ -130,7 +131,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ],
           ),
           SizedBox(
-            height: 120,
+            height: 132,
             child: shop.characters.isEmpty
                 ? const LoadingWidget()
                 : ListView.separated(
@@ -140,7 +141,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     itemBuilder: (context, i) {
                       final c = shop.characters[i];
                       return Container(
-                        width: 110,
+                        width: 116,
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
                           color: AppColors.surface(context),
@@ -149,8 +150,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ),
                         child: Column(
                           children: [
-                            CharacterAvatar(characterId: c.id, size: 60),
+                            CharacterAvatar(characterId: c.id, size: 64),
+                            const SizedBox(height: 4),
                             Text(c.name,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                                 style: TextStyle(
                                     fontWeight: FontWeight.w600, color: AppColors.text(context))),
                             Text(c.isOwned ? 'Dimiliki' : '${c.priceCoins} koin',

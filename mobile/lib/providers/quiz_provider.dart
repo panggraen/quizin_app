@@ -19,7 +19,7 @@ class QuizProvider extends ChangeNotifier {
   QuestionModel get currentQuestion => attempt!.questions[index];
   bool get isLast => attempt != null && index == attempt!.questions.length - 1;
 
-  Future<List<QuizModuleModel>> modules(int materialId) => _service.modules(materialId);
+  Future<List<QuizModuleModel>> modules(int subjectId) => _service.modules(subjectId);
   Future<List<ReviewItemModel>> review(int attemptId) => _service.review(attemptId);
 
   Future<void> start(int moduleId) async {

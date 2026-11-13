@@ -14,11 +14,6 @@ import 'package:quizin_app/services/profile_service.dart';
 import 'package:quizin_app/services/quiz_service.dart';
 import 'package:quizin_app/services/shop_service.dart';
 
-// =============================================================
-// DATA CONTOH (DUMMY) - menggantikan Laravel sementara.
-// Aturan bisnis di sini meniru aturan server di PRD supaya UI
-// bisa dicoba. Semua ini diganti ApiService saat backend siap.
-// =============================================================
 
 class _MockUser {
   _MockUser({
@@ -44,13 +39,30 @@ class _MockUser {
   final List<ProgressItemModel> history = [];
 }
 
+typedef _QuizItem = ({
+  String question,
+  List<String> options,
+  int correct,
+  List<String> reasons,
+});
+
 class _Q {
-  const _Q(this.id, this.text, this.options, this.correct, this.explanation);
+  const _Q(
+    this.id,
+    this.text,
+    this.options,
+    this.correct,
+    this.explanation, {
+    required this.reasons,
+  });
   final int id;
   final String text;
   final List<String> options;
   final int correct; // indeks 0..3, TIDAK pernah dikirim sebelum dijawab
-  final String explanation;
+  final String explanation; // alasan jawaban benar (dipakai di halaman pembahasan)
+
+  /// Alasan per pilihan A..D: kenapa pilihan itu benar / salah.
+  final List<String> reasons;
 }
 
 class _Attempt {
@@ -69,7 +81,9 @@ class MockBackend
   static const int materialXp = 15; // keputusan tim: 15 XP per materi (pertama kali)
   static const int xpPerCorrect = 10;
   static const int coinsPerCorrect = 1;
-  static const int _modulesPerMaterial = 2;
+  // Contoh: tiap materi punya 6 modul, jadi Biologi (2 materi) = modul 1..12.
+  // ID modul = subjectId * 100 + nomor modul (nomor urut sepanjang bidang).
+  static const int _modulesPerMaterial = 6;
 
   static const List<({int id, String name})> _categories = [
     (id: 1, name: 'IPA'),
@@ -147,9 +161,11 @@ class MockBackend
   ];
 
   static const List<({int id, String name, String description, int price})> _characters = [
-    (id: 1, name: 'Nimbi', description: 'Karakter awal yang selalu menemani belajarmu.', price: 0),
-    (id: 2, name: 'Clumbi', description: 'Salah satu karakter yang membuat langit tertawa.', price: 250),
-    (id: 3, name: 'Clambi', description: 'Salah satu karakter yang memiliki emosi.', price: 250),
+    (id: 1, name: 'Nimbi', description: 'Maskot awan tanpa aksesori.', price: 0),
+    (id: 2, name: 'Headphone', description: 'Belajar sambil dengar musik favorit.', price: 150),
+    (id: 3, name: 'Mahkota', description: 'Untuk raja dan ratu kuis.', price: 500),
+    (id: 4, name: 'Topi Wisuda', description: 'Tampil cerdas seperti lulusan terbaik.', price: 250),
+    (id: 6, name: 'Topi Penyihir', description: 'Sihir pengetahuan di kepalamu.', price: 300),
   ];
 
   static const List<({int id, String name, String description, int need})> _badges = [
@@ -166,6 +182,208 @@ class MockBackend
     (id: 105, name: 'Raffa', xp: 3500),
     (id: 106, name: 'Affa', xp: 3500),
   ];
+
+  // ====== TEMPAT MENGISI SOAL & ALASAN ======
+  // Kunci = ID modul = ID bidang * 100 + nomor modul.
+  //   101 = Biologi modul 1, 102 = Biologi modul 2, 201 = Fisika modul 1, dst.
+  // Modul yang tidak ada di sini memakai soal [DUMMY].
+  //
+  // question : teks soal
+  // options  : 4 pilihan (A, B, C, D)
+  // correct  : indeks jawaban benar (0 = A, 1 = B, 2 = C, 3 = D)
+  // reasons  : 4 alasan, urutannya sama dengan options. Alasan untuk jawaban
+  //            benar = kenapa benar; alasan lainnya = kenapa salah.
+  static const Map<int, List<_QuizItem>> _quizBank = {
+    // Biologi - Modul 1 (Fotosintesis: dasar)
+    101: [
+        (
+          question: 'Apa fungsi utama klorofil pada tumbuhan?',
+          options: [
+            'Menyerap air',
+            'Menangkap cahaya matahari untuk fotosintesis',
+            'Menyimpan cadangan makanan',
+            'Melindungi sel dari sinar UV',
+          ],
+          correct: 1,
+          reasons: [
+            'Salah. Air diserap oleh akar dari dalam tanah, lalu diangkut ke daun lewat pembuluh xilem. Klorofil tidak ikut menyerap air; klorofil hanya memakai air itu sebagai bahan baku fotosintesis.',
+            'Benar. Klorofil adalah pigmen hijau di dalam kloroplas yang menyerap energi cahaya matahari. Energi inilah yang dipakai untuk mengubah air dan karbon dioksida menjadi glukosa dan oksigen. Tanpa klorofil, fotosintesis tidak bisa berjalan.',
+            'Salah. Cadangan makanan disimpan tumbuhan dalam bentuk amilum di bagian seperti akar, umbi, batang, atau biji. Klorofil bertugas menangkap cahaya, bukan menyimpan makanan.',
+            'Salah. Perlindungan dari sinar UV berkaitan dengan lapisan pelindung dan pigmen lain pada daun, bukan fungsi utama klorofil. Klorofil justru memanfaatkan cahaya, bukan menahannya.',
+          ],
+        ),
+        (
+          question: 'Apa hasil utama fotosintesis?',
+          options: [
+            'Karbon dioksida dan air',
+            'Glukosa dan oksigen',
+            'Protein dan lemak',
+            'Nitrogen dan air',
+          ],
+          correct: 1,
+          reasons: [
+            'Salah. Karbon dioksida dan air adalah bahan baku yang masuk ke proses fotosintesis, bukan hasilnya. Keduanya habis dipakai untuk membentuk glukosa.',
+            'Benar. Tumbuhan memakai karbon dioksida dan air sebagai bahan baku. Dengan bantuan cahaya, keduanya diubah menjadi glukosa sebagai makanan tumbuhan, dan oksigen yang dilepas ke udara sebagai gas buangan.',
+            'Salah. Protein dan lemak dibuat tumbuhan sesudahnya, memakai glukosa dan unsur lain seperti nitrogen dari tanah. Keduanya bukan hasil langsung fotosintesis.',
+            'Salah. Nitrogen diserap akar dari tanah dalam bentuk senyawa seperti nitrat, bukan dihasilkan fotosintesis. Air juga bahan baku, bukan hasil.',
+          ],
+        ),
+        (
+          question: 'Gas apa yang diserap tumbuhan untuk fotosintesis?',
+          options: ['Oksigen', 'Nitrogen', 'Karbon dioksida', 'Hidrogen'],
+          correct: 2,
+          reasons: [
+            'Salah. Oksigen justru dilepaskan tumbuhan sebagai hasil fotosintesis. Tumbuhan memang memakai oksigen, tetapi untuk respirasi, bukan sebagai bahan baku fotosintesis.',
+            'Salah. Walaupun nitrogen adalah gas terbanyak di udara, tumbuhan tidak memakainya langsung untuk fotosintesis. Nitrogen diambil akar dari tanah dalam bentuk senyawa.',
+            'Benar. Karbon dioksida diserap dari udara lewat stomata, yaitu pori-pori kecil di permukaan daun. Gas ini menjadi bahan baku utama pembuatan glukosa.',
+            'Salah. Hidrogen bebas hampir tidak ada di udara. Hidrogen untuk membentuk glukosa berasal dari air yang diserap akar.',
+          ],
+        ),
+        (
+          question: 'Di bagian sel mana fotosintesis berlangsung?',
+          options: ['Mitokondria', 'Inti sel', 'Ribosom', 'Kloroplas'],
+          correct: 3,
+          reasons: [
+            'Salah. Mitokondria adalah tempat respirasi sel, yaitu mengubah glukosa menjadi energi. Ini berlawanan arah dengan fotosintesis yang justru membentuk glukosa.',
+            'Salah. Inti sel mengatur kegiatan sel dan menyimpan materi genetik (DNA). Inti sel tidak mengandung klorofil sehingga tidak bisa menangkap cahaya.',
+            'Salah. Ribosom adalah tempat pembuatan protein. Ribosom tidak punya klorofil dan tidak terlibat langsung dalam fotosintesis.',
+            'Benar. Kloroplas adalah organel yang mengandung klorofil. Di dalamnya cahaya ditangkap dan diubah menjadi energi kimia pada glukosa, sehingga di sinilah fotosintesis berlangsung.',
+          ],
+        ),
+        (
+          question: 'Apa sumber energi utama fotosintesis?',
+          options: ['Panas bumi', 'Air hujan', 'Cahaya matahari', 'Angin'],
+          correct: 2,
+          reasons: [
+            'Salah. Panas bumi berasal dari dalam bumi dan bukan berupa cahaya, sehingga tidak bisa ditangkap oleh klorofil.',
+            'Salah. Air hujan menambah air di tanah yang dipakai sebagai bahan baku, tetapi air bukan sumber energi. Fotosintesis tetap butuh energi dari luar.',
+            'Benar. Energi cahaya matahari ditangkap klorofil lalu diubah menjadi energi kimia yang tersimpan di dalam glukosa. Itulah sebabnya fotosintesis hanya berjalan optimal saat ada cahaya.',
+            'Salah. Angin membantu penyerbukan dan penyebaran biji, tetapi tidak menyediakan energi cahaya yang dibutuhkan fotosintesis.',
+          ],
+        ),
+    ],
+    // Biologi - Modul 2 (Fotosintesis: mudah)
+    102: [
+        (
+          question: 'Tumbuhan hijau bisa membuat makanannya sendiri. Makhluk hidup seperti ini disebut?',
+          options: ['Heterotrof', 'Autotrof', 'Parasit', 'Pengurai'],
+          correct: 1,
+          reasons: [
+            'Salah. Heterotrof adalah makhluk hidup yang tidak bisa membuat makanan sendiri dan harus makan makhluk lain, seperti hewan dan manusia. Tumbuhan hijau justru bisa membuat makanan sendiri.',
+            'Benar. Autotrof adalah makhluk hidup yang membuat makanannya sendiri. Tumbuhan hijau melakukannya lewat fotosintesis, memakai cahaya matahari, air, dan karbon dioksida.',
+            'Salah. Parasit hidup menumpang pada makhluk lain dan mengambil makanan dari inangnya. Tumbuhan hijau biasa tidak hidup dengan cara itu.',
+            'Salah. Pengurai, seperti jamur dan bakteri, mendapat makanan dengan menguraikan sisa makhluk hidup yang sudah mati. Mereka tidak melakukan fotosintesis.',
+          ],
+        ),
+        (
+          question: 'Bagian tumbuhan yang paling banyak melakukan fotosintesis adalah?',
+          options: ['Akar', 'Daun', 'Batang', 'Bunga'],
+          correct: 1,
+          reasons: [
+            'Salah. Akar berada di dalam tanah dan tidak terkena cahaya matahari. Tugas akar adalah menyerap air dan mineral, bukan fotosintesis.',
+            'Benar. Daun berwarna hijau karena banyak mengandung klorofil, lebar sehingga mudah menangkap cahaya, dan punya stomata untuk keluar masuknya gas. Karena itu daun disebut tempat utama fotosintesis.',
+            'Salah. Batang berfungsi menopang tumbuhan dan mengangkut air serta zat makanan. Pada beberapa tumbuhan batang muda memang hijau, tetapi fotosintesis utama tetap terjadi di daun.',
+            'Salah. Bunga berfungsi untuk perkembangbiakan, misalnya membentuk buah dan biji. Bunga bukan tempat utama fotosintesis.',
+          ],
+        ),
+        (
+          question: 'Gas apa yang dilepaskan tumbuhan ke udara saat fotosintesis?',
+          options: ['Karbon dioksida', 'Nitrogen', 'Oksigen', 'Uap bensin'],
+          correct: 2,
+          reasons: [
+            'Salah. Karbon dioksida justru diserap tumbuhan dari udara sebagai bahan baku fotosintesis, bukan dilepaskan.',
+            'Salah. Nitrogen bukan hasil fotosintesis. Tumbuhan tidak melepaskan nitrogen saat membuat makanan.',
+            'Benar. Oksigen adalah gas buangan dari fotosintesis. Gas ini dilepas ke udara dan dipakai manusia serta hewan untuk bernapas. Itulah sebabnya tumbuhan penting bagi kehidupan.',
+            'Salah. Uap bensin berasal dari bahan bakar kendaraan, bukan dari tumbuhan, dan tidak dihasilkan fotosintesis.',
+          ],
+        ),
+        (
+          question: 'Fotosintesis paling aktif berlangsung pada waktu?',
+          options: [
+            'Siang hari saat ada cahaya',
+            'Tengah malam',
+            'Hanya ketika hujan',
+            'Ketika tanah kering',
+          ],
+          correct: 0,
+          reasons: [
+            'Benar. Fotosintesis membutuhkan cahaya matahari sebagai sumber energi. Karena cahaya paling banyak tersedia di siang hari, fotosintesis paling aktif pada saat itu.',
+            'Salah. Pada malam hari tidak ada cahaya matahari, sehingga fotosintesis hampir berhenti. Tanpa energi cahaya, tumbuhan tidak bisa membuat glukosa.',
+            'Salah. Hujan menambah air, tetapi saat hujan langit biasanya mendung sehingga cahaya berkurang. Yang menentukan fotosintesis adalah adanya cahaya, bukan hujan.',
+            'Salah. Tanah yang kering berarti tumbuhan kekurangan air, salah satu bahan baku fotosintesis. Kondisi ini justru menghambat fotosintesis.',
+          ],
+        ),
+        (
+          question: 'Bahan baku fotosintesis yang diserap tumbuhan dari tanah lewat akar adalah?',
+          options: ['Air', 'Oksigen', 'Glukosa', 'Cahaya'],
+          correct: 0,
+          reasons: [
+            'Benar. Akar menyerap air dari tanah, lalu air diangkut ke daun. Di daun, air dipakai bersama karbon dioksida dan cahaya untuk membuat glukosa.',
+            'Salah. Oksigen adalah hasil fotosintesis yang dilepas ke udara, bukan bahan baku yang diserap akar dari tanah.',
+            'Salah. Glukosa adalah hasil fotosintesis, yaitu makanan yang dibuat tumbuhan sendiri. Tumbuhan tidak menyerapnya dari tanah.',
+            'Salah. Cahaya berasal dari matahari dan ditangkap oleh daun, bukan diserap akar dari tanah.',
+          ],
+        ),
+    ],
+    // Biologi - Modul 3 (Fotosintesis: sedang)
+    103: [
+        (
+          question: 'Pori-pori kecil di permukaan daun tempat keluar masuknya gas disebut?',
+          options: ['Xilem', 'Stomata', 'Floem', 'Kutikula'],
+          correct: 1,
+          reasons: [
+            'Salah. Xilem adalah pembuluh yang mengangkut air dan mineral dari akar ke daun. Xilem bukan pori-pori di permukaan daun.',
+            'Benar. Stomata adalah pori kecil di epidermis daun yang bisa membuka dan menutup. Lewat stomata, karbon dioksida masuk dan oksigen serta uap air keluar.',
+            'Salah. Floem adalah pembuluh yang mengangkut hasil fotosintesis ke seluruh bagian tumbuhan, bukan tempat keluar masuknya gas.',
+            'Salah. Kutikula adalah lapisan lilin tipis di permukaan daun yang mengurangi penguapan. Lapisan ini justru menutupi permukaan, bukan pori untuk gas.',
+          ],
+        ),
+        (
+          question: 'Pembuluh yang mengangkut air dari akar ke daun adalah?',
+          options: ['Floem', 'Stomata', 'Xilem', 'Epidermis'],
+          correct: 2,
+          reasons: [
+            'Salah. Floem mengangkut hasil fotosintesis (glukosa) dari daun ke bagian lain, arahnya berbeda dengan pengangkutan air dari akar.',
+            'Salah. Stomata adalah pori di daun untuk pertukaran gas, bukan pembuluh pengangkut.',
+            'Benar. Xilem adalah pembuluh kayu yang mengangkut air dan mineral dari akar naik ke batang dan daun. Air ini kemudian dipakai sebagai bahan baku fotosintesis.',
+            'Salah. Epidermis adalah lapisan paling luar yang melindungi jaringan di dalamnya. Epidermis bukan pembuluh pengangkut.',
+          ],
+        ),
+        (
+          question: 'Pembuluh yang mengangkut hasil fotosintesis ke seluruh tubuh tumbuhan adalah?',
+          options: ['Xilem', 'Floem', 'Kambium', 'Empulur'],
+          correct: 1,
+          reasons: [
+            'Salah. Xilem mengangkut air dan mineral dari akar ke atas, bukan mengangkut hasil fotosintesis.',
+            'Benar. Floem adalah pembuluh tapis yang membawa glukosa hasil fotosintesis dari daun ke akar, batang, buah, dan bagian lain yang membutuhkan.',
+            'Salah. Kambium adalah jaringan yang membelah untuk membuat batang bertambah besar. Kambium bukan pembuluh pengangkut.',
+            'Salah. Empulur adalah jaringan di bagian tengah batang yang berfungsi menyimpan cadangan makanan, bukan mengangkutnya.',
+          ],
+        ),
+        (
+          question: 'Glukosa hasil fotosintesis yang tidak langsung dipakai akan disimpan dalam bentuk?',
+          options: ['Amilum', 'Protein', 'Klorofil', 'Oksigen'],
+          correct: 0,
+          reasons: [
+            'Benar. Kelebihan glukosa diubah menjadi amilum (pati) dan disimpan, misalnya di akar, batang, umbi, atau biji, sebagai cadangan makanan.',
+            'Salah. Protein dibuat tumbuhan dengan tambahan unsur seperti nitrogen. Protein bukan bentuk simpanan utama glukosa.',
+            'Salah. Klorofil adalah pigmen penangkap cahaya, bukan cadangan makanan.',
+            'Salah. Oksigen adalah gas buangan fotosintesis yang dilepas ke udara, bukan zat yang disimpan sebagai cadangan makanan.',
+          ],
+        ),
+        (
+          question: 'Daun tumbuhan berwarna hijau karena mengandung?',
+          options: ['Karotenoid', 'Klorofil', 'Antosianin', 'Xantofil'],
+          correct: 1,
+          reasons: [
+            'Salah. Karotenoid adalah pigmen kuning sampai oranye, seperti pada wortel. Pigmen ini tidak membuat daun tampak hijau.',
+            'Benar. Klorofil menyerap cahaya merah dan biru dan memantulkan cahaya hijau, sehingga daun tampak hijau. Klorofil juga pigmen utama yang dipakai dalam fotosintesis.',
+            'Salah. Antosianin adalah pigmen merah, ungu, atau biru, misalnya pada daun bayam merah atau kol ungu.',
+            'Salah. Xantofil adalah pigmen kuning yang terlihat jelas ketika klorofil berkurang, misalnya saat daun menguning.',
+          ],
+        ),
+    ],
+  };
 
   final List<_MockUser> _users = [];
   final Map<int, _Attempt> _attempts = {};
@@ -215,6 +433,22 @@ class MockBackend
       materialsCompleted: u.materialsDone.length,
       modulesCompleted: u.moduleBest.length,
     );
+  }
+
+  List<({int id, int subjectId, String title, String content})> _materialsOf(int subjectId) =>
+      _materials.where((m) => m.subjectId == subjectId).toList();
+
+  int _moduleCount(int subjectId) => _materialsOf(subjectId).length * _modulesPerMaterial;
+
+  ({int id, int subjectId, String title, String content}) _materialOfModule(int moduleId) {
+    final mats = _materialsOf(moduleId ~/ 100);
+    return mats[((moduleId % 100) - 1) ~/ _modulesPerMaterial];
+  }
+
+  String _subjectPath(int subjectId) {
+    final s = _subjects.firstWhere((x) => x.id == subjectId);
+    final c = _categories.firstWhere((x) => x.id == s.categoryId);
+    return '${c.name}-${s.name}';
   }
 
   String _path(int materialId) {
@@ -360,50 +594,60 @@ class MockBackend
 
   // ---------------- KUIS ----------------
   List<_Q> _questionsFor(int moduleId) {
-    final materialId = moduleId ~/ 10;
-    final m = _materials.firstWhere((x) => x.id == materialId);
-    if (materialId == 1) {
-      const bank = [
-        ['Apa fungsi utama klorofil pada tumbuhan?', 'Menyerap air', 'Menangkap cahaya matahari untuk fotosintesis', 'Menyimpan cadangan makanan', 'Melindungi sel dari sinar UV', '1', 'Klorofil menangkap energi cahaya yang dipakai untuk fotosintesis.'],
-        ['Apa hasil utama fotosintesis?', 'Karbon dioksida dan air', 'Glukosa dan oksigen', 'Protein dan lemak', 'Nitrogen dan air', '1', 'Fotosintesis menghasilkan glukosa sebagai makanan dan oksigen sebagai gas buangan.'],
-        ['Gas apa yang diserap tumbuhan untuk fotosintesis?', 'Oksigen', 'Nitrogen', 'Karbon dioksida', 'Hidrogen', '2', 'Tumbuhan menyerap karbon dioksida dari udara lewat stomata.'],
-        ['Di bagian sel mana fotosintesis berlangsung?', 'Mitokondria', 'Inti sel', 'Ribosom', 'Kloroplas', '3', 'Kloroplas mengandung klorofil sehingga menjadi tempat fotosintesis.'],
-        ['Apa sumber energi utama fotosintesis?', 'Panas bumi', 'Air hujan', 'Cahaya matahari', 'Angin', '2', 'Energi cahaya matahari diubah menjadi energi kimia dalam glukosa.'],
-      ];
-      return List.generate(5, (i) {
+    final m = _materialOfModule(moduleId);
+    final bank = _quizBank[moduleId];
+    if (bank != null) {
+      return List.generate(bank.length, (i) {
         final b = bank[i];
-        return _Q(moduleId * 100 + i + 1, b[0], [b[1], b[2], b[3], b[4]], int.parse(b[5]), b[6]);
+        return _Q(
+          moduleId * 100 + i + 1,
+          b.question,
+          b.options,
+          b.correct,
+          b.reasons[b.correct],
+          reasons: b.reasons,
+        );
       });
     }
+    // Modul yang belum diisi: soal DUMMY.
     return List.generate(5, (i) {
       final k = i + 1;
+      final correct = (k + moduleId) % 4;
       return _Q(
         moduleId * 100 + k,
         '[DUMMY] Soal $k tentang ${m.title}?',
         const ['Jawaban A', 'Jawaban B', 'Jawaban C', 'Jawaban D'],
-        (k + moduleId) % 4,
+        correct,
         '[DUMMY] Pembahasan soal $k. Isi asli dibuat admin di Panel Filament.',
+        reasons: [
+          for (var j = 0; j < 4; j++)
+            j == correct
+                ? '[DUMMY] Alasan pilihan ${'ABCD'[j]} benar. Isi asli dibuat admin.'
+                : '[DUMMY] Alasan pilihan ${'ABCD'[j]} salah. Isi asli dibuat admin.',
+        ],
       );
     });
   }
 
   @override
-  Future<List<QuizModuleModel>> modules(int materialId) async {
+  Future<List<QuizModuleModel>> modules(int subjectId) async {
     await _wait();
     final u = _user;
-    if (!_materials.any((m) => m.id == materialId)) {
-      throw ApiException('Materi tidak ditemukan.');
+    if (!_subjects.any((s) => s.id == subjectId)) {
+      throw ApiException('Bidang tidak ditemukan.');
     }
-    return List.generate(_modulesPerMaterial, (i) {
+    return List.generate(_moduleCount(subjectId), (i) {
       final n = i + 1;
-      final id = materialId * 10 + n;
+      final id = subjectId * 100 + n;
       final best = u.moduleBest[id];
       final prevDone = n == 1 || u.moduleBest.containsKey(id - 1);
+      final material = _materialOfModule(id);
       return QuizModuleModel(
         id: id,
-        materialId: materialId,
+        subjectId: subjectId,
+        materialId: material.id,
         moduleNumber: n,
-        title: 'Modul $n',
+        title: material.title,
         status: best != null ? 'completed' : (prevDone ? 'available' : 'locked'),
         bestScore: best,
       );
@@ -414,9 +658,9 @@ class MockBackend
   Future<AttemptModel> startAttempt(int moduleId) async {
     await _wait();
     final u = _user;
-    final materialId = moduleId ~/ 10;
-    final n = moduleId % 10;
-    if (!_materials.any((m) => m.id == materialId) || n < 1 || n > _modulesPerMaterial) {
+    final subjectId = moduleId ~/ 100;
+    final n = moduleId % 100;
+    if (!_subjects.any((s) => s.id == subjectId) || n < 1 || n > _moduleCount(subjectId)) {
       throw ApiException('Modul tidak ditemukan.');
     }
     if (n > 1 && !u.moduleBest.containsKey(moduleId - 1)) {
@@ -476,6 +720,7 @@ class MockBackend
       isCorrect: optionIndex == q.correct,
       correctOptionId: q.id * 10 + q.correct + 1,
       explanation: q.explanation,
+      chosenExplanation: q.reasons[optionIndex],
     );
   }
 
@@ -506,7 +751,7 @@ class MockBackend
       0,
       ProgressItemModel(
         title: 'Anda sudah menyelesaikan kuis',
-        subtitle: '${_path(a.moduleId ~/ 10)} · Modul ${a.moduleId % 10} · $score%',
+        subtitle: '${_subjectPath(a.moduleId ~/ 100)} · Modul ${a.moduleId % 100} · $score%',
         type: 'quiz',
       ),
     );
@@ -543,6 +788,16 @@ class MockBackend
             correctAnswer: q.options[q.correct],
             isCorrect: chosen == q.correct,
             explanation: q.explanation,
+            options: [
+              for (var j = 0; j < q.options.length; j++)
+                ReviewOptionModel(
+                  label: 'ABCD'[j],
+                  text: q.options[j],
+                  isCorrect: j == q.correct,
+                  isChosen: j == chosen,
+                  reason: q.reasons[j],
+                ),
+            ],
           );
         }(),
     ];

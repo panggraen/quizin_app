@@ -8,6 +8,7 @@ class NavCard extends StatelessWidget {
     required this.title,
     this.subtitle,
     this.icon,
+    this.leading,
     this.accent = AppColors.navy,
     this.filled = false,
     this.trailing,
@@ -17,6 +18,9 @@ class NavCard extends StatelessWidget {
   final String title;
   final String? subtitle;
   final IconData? icon;
+
+  /// Widget kustom di kiri (mis. gambar). Jika ada, menggantikan [icon].
+  final Widget? leading;
   final Color accent;
   final bool filled;
   final Widget? trailing;
@@ -38,7 +42,10 @@ class NavCard extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
           child: Row(
             children: [
-              if (icon != null) ...[
+              if (leading != null) ...[
+                leading!,
+                const SizedBox(width: 12),
+              ] else if (icon != null) ...[
                 CircleAvatar(
                   radius: 18,
                   backgroundColor: accent.withValues(alpha: 0.18),

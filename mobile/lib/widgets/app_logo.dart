@@ -1,17 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:quizin_app/core/theme/app_colors.dart';
 
-/// Logo QUIZIN. Taruh file di assets/images/logo.png; jika belum ada tampil placeholder.
+
 class AppLogo extends StatelessWidget {
   const AppLogo({super.key, this.size = 96});
+
+  static const String asset = 'assets/logo.png';
+
   final double size;
 
   @override
   Widget build(BuildContext context) {
     return Image.asset(
-      'assets/images/logo.png',
-      width: size,
+      asset,
       height: size,
+      fit: BoxFit.contain,
+      semanticLabel: 'Logo Quizin',
       errorBuilder: (context, error, stackTrace) => Container(
         width: size,
         height: size,
