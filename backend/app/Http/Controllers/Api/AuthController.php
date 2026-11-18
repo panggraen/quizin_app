@@ -21,19 +21,45 @@ class AuthController extends Controller
         ]);
 
         $user = DB::transaction(function () use ($data) {
+
+            // Membuat akun pengguna.
             $user = User::create([
                 'name' => $data['name'],
                 'email' => $data['email'],
                 'password' => Hash::make($data['password']),
             ]);
 
-            // Membuat statistik awal pengguna QUIZIN.
-            // Nilai default: 0 XP, Level 1, 0 koin.
-            $user->stats()->create([]);
+            // Statistik awal: 0 XP, Level 1, 0 koin.
+            $stats = $user->stats()->create([]);
+
+            // Ambil karakter awal berdasarkan statusnya,
+            // bukan berdasarkan nama atau slug tertentu.
+            $defaultCharacter = DB::table('characters')
+                ->where('is_default', true)
+                ->where('is_published', true)
+                ->first();
+
+            if ($defaultCharacter) {
+
+                // Pengguna langsung memiliki karakter awal.
+                DB::table('user_characters')->insert([
+                    'user_id' => $user->id,
+                    'character_id' => $defaultCharacter->id,
+                    'obtained_at' => now(),
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+
+                // Aktifkan karakter tersebut pada profil.
+                $stats->update([
+                    'active_character_id' => $defaultCharacter->id,
+                ]);
+            }
 
             return $user;
         });
 
+        // Membuat token login Sanctum.
         $token = $user->createToken(
             'quizin-mobile',
             ['*'],
