@@ -240,11 +240,111 @@
             color: var(--muted);
         }
 
+        .button {
+            display: inline-block;
+            border: 0;
+            border-radius: 8px;
+            padding: 10px 14px;
+            background: var(--blue);
+            color: white;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .button.secondary {
+            background: #E8EDF5;
+            color: var(--text);
+        }
+
+        .button.danger {
+            background: #C63B3B;
+        }
+
+        .actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .actions form { margin: 0; }
+
+        .alert {
+            margin-bottom: 18px;
+            padding: 13px 16px;
+            border-radius: 9px;
+            font-size: 14px;
+        }
+
+        .alert.success {
+            background: #E0F8EB;
+            color: #176B42;
+        }
+
+        .alert.error {
+            background: #FDE8E8;
+            color: #9F2525;
+        }
+
+        .form-card {
+            margin-bottom: 22px;
+            padding: 24px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 16px;
+        }
+
+        .field { margin-bottom: 16px; }
+
+        .field label {
+            display: block;
+            margin-bottom: 7px;
+            color: #364767;
+            font-size: 13px;
+            font-weight: bold;
+        }
+
+        .field input,
+        .field textarea {
+            width: 100%;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 11px 12px;
+            font: inherit;
+        }
+
+        .field textarea {
+            min-height: 90px;
+            resize: vertical;
+        }
+
+        .field-error {
+            margin-top: 5px;
+            color: #C63B3B;
+            font-size: 12px;
+        }
+
+        .checkbox-field {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            margin-bottom: 18px;
+            color: #364767;
+            font-size: 13px;
+        }
+
         @media(max-width: 700px) {
             .layout { flex-direction: column; }
             .sidebar { width: 100%; }
             .content { padding: 16px; }
             .topbar { padding: 0 16px; }
+            .form-grid { grid-template-columns: 1fr; gap: 0; }
+            .card-header { align-items: flex-start; }
+            .actions { flex-direction: column; align-items: stretch; }
         }
     </style>
 </head>
@@ -307,6 +407,107 @@
                 </p>
             </div>
 
+            @if (session('success'))
+                <div class="alert success">{{ session('success') }}</div>
+            @endif
+
+            @if (session('error'))
+                <div class="alert error">{{ session('error') }}</div>
+            @endif
+
+            @if ($showForm)
+                <section class="card form-card">
+                    <div class="card-header" style="padding: 0 0 20px;">
+                        <div>
+                            <h2>
+                                {{ $editingCategory ? 'Edit Kategori' : 'Tambah Kategori' }}
+                            </h2>
+                            <p>Lengkapi informasi kategori di bawah ini.</p>
+                        </div>
+                    </div>
+
+                    <form method="POST"
+                          action="{{ $editingCategory
+                              ? route('admin.categories.update', $editingCategory)
+                              : route('admin.categories.store') }}">
+                        @csrf
+                        @if ($editingCategory)
+                            @method('PUT')
+                        @endif
+
+                        <div class="form-grid">
+                            <div class="field">
+                                <label for="name">Nama kategori</label>
+                                <input id="name"
+                                       name="name"
+                                       type="text"
+                                       maxlength="100"
+                                       value="{{ old('name', $editingCategory?->name ?? '') }}"
+                                       required>
+                                @error('name')
+                                    <div class="field-error">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <div class="field">
+                                <label for="slug">Slug</label>
+                                <input id="slug"
+                                       name="slug"
+                                       type="text"
+                                       maxlength="120"
+                                       value="{{ old('slug', $editingCategory?->slug ?? '') }}"
+                                       required>
+                                @error('slug')
+                                    <div class="field-error">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <div class="field">
+                                <label for="sort_order">Urutan</label>
+                                <input id="sort_order"
+                                       name="sort_order"
+                                       type="number"
+                                       min="0"
+                                       value="{{ old('sort_order', $editingCategory?->sort_order ?? 0) }}"
+                                       required>
+                                @error('sort_order')
+                                    <div class="field-error">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+
+                        <div class="field">
+                            <label for="description">Deskripsi</label>
+                            <textarea id="description"
+                                      name="description">{{ old('description', $editingCategory?->description ?? '') }}</textarea>
+                            @error('description')
+                                <div class="field-error">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        <input type="hidden" name="is_active" value="0">
+                        <label class="checkbox-field">
+                            <input type="checkbox"
+                                   name="is_active"
+                                   value="1"
+                                   @checked((bool) old('is_active', $editingCategory?->is_active ?? true))>
+                            Kategori aktif
+                        </label>
+                        @error('is_active')
+                            <div class="field-error">{{ $message }}</div>
+                        @enderror
+
+                        <button class="button" type="submit">
+                            {{ $editingCategory ? 'Simpan Perubahan' : 'Tambah Kategori' }}
+                        </button>
+                        <a class="button secondary"
+                           href="{{ route('admin.categories.index') }}">
+                            Batal
+                        </a>
+                    </form>
+                </section>
+            @endif
+
             <div class="summary">
                 <div>
                     <span>Total kategori terdaftar</span>
@@ -324,6 +525,10 @@
                             pada database QUIZIN.
                         </p>
                     </div>
+                    <a class="button"
+                       href="{{ route('admin.categories.create') }}">
+                        Tambah Kategori
+                    </a>
                 </div>
 
                 <div class="table-wrap">
@@ -336,6 +541,7 @@
                                 <th>Jumlah Bidang</th>
                                 <th>Urutan</th>
                                 <th>Status</th>
+                                <th>Aksi</th>
                             </tr>
                         </thead>
 
@@ -371,10 +577,28 @@
                                             </span>
                                         @endif
                                     </td>
+
+                                    <td>
+                                        <div class="actions">
+                                            <a class="button secondary"
+                                               href="{{ route('admin.categories.edit', $category) }}">
+                                                Edit
+                                            </a>
+                                            <form method="POST"
+                                                  action="{{ route('admin.categories.destroy', $category) }}"
+                                                  onsubmit="return confirm('Yakin ingin menghapus kategori ini?')">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button class="button danger" type="submit">
+                                                    Hapus
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="6" class="empty">
+                                    <td colspan="7" class="empty">
                                         Belum ada kategori.
                                     </td>
                                 </tr>
