@@ -29,11 +29,11 @@ void main() {
     expect(mods[1].status, 'available');
   });
 
-  test('Biologi langsung berisi modul 1..12 berurutan', () async {
+  test('Biologi langsung berisi modul 1..10 berurutan', () async {
     final b = await loggedIn();
     final mods = await b.modules(1);
-    expect(mods.length, 12);
-    expect([for (final m in mods) m.moduleNumber], List.generate(12, (i) => i + 1));
+    expect(mods.length, 10);
+    expect([for (final m in mods) m.moduleNumber], List.generate(10, (i) => i + 1));
     expect(mods.first.status, 'available');
     expect(mods.skip(1).every((m) => m.status == 'locked'), isTrue);
   });

@@ -10,53 +10,32 @@ class CharacterCard extends StatelessWidget {
     required this.busy,
     required this.onBuy,
     required this.onUse,
-    this.onUnequip,
   });
 
   final CharacterModel character;
   final bool busy;
   final VoidCallback onBuy;
   final VoidCallback onUse;
-  final VoidCallback? onUnequip;
 
   @override
   Widget build(BuildContext context) {
     final c = character;
-    Widget action;
-    if (c.isActive && !c.isDefault && onUnequip != null) {
-      action = OutlinedButton(
-        onPressed: busy ? null : onUnequip,
-        child: const Text('Lepas'),
-      );
-    } else if (c.isActive) {
-      action = const Chip(label: Text('Dipakai'), avatar: Icon(Icons.check, size: 16));
-    } else if (c.isOwned) {
-      action = FilledButton(
-        onPressed: busy ? null : onUse,
-        style: FilledButton.styleFrom(backgroundColor: AppColors.green),
-        child: const Text('Gunakan'),
-      );
-    } else {
-      action = FilledButton(
-        onPressed: busy ? null : onBuy,
-        style: FilledButton.styleFrom(backgroundColor: AppColors.navy),
-        child: const Text('Beli'),
-      );
-    }
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: AppColors.surface(context),
-        borderRadius: BorderRadius.circular(AppSizes.radius),
-        border: Border.all(color: Colors.black12),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.line),
       ),
       child: Row(
         children: [
-          SizedBox(
-            width: 96,
-            child: Center(child: CloudMascot(size: 72, accessoryId: c.id)),
+          CloudMascot(size: 80, characterId: c.id),
+          Container(
+            width: 1,
+            height: 64,
+            margin: const EdgeInsets.symmetric(horizontal: 12),
+            color: AppColors.line,
           ),
-          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -65,32 +44,80 @@ class CharacterCard extends StatelessWidget {
                   children: [
                     Expanded(
                       child: Text(c.name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                           style: TextStyle(
-                              fontWeight: FontWeight.w700,
+                              fontWeight: FontWeight.w800,
                               fontSize: 16,
-                              color: AppColors.text(context))),
+                              color: AppColors.accent(context))),
                     ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                      decoration: BoxDecoration(
-                          color: AppColors.navy, borderRadius: BorderRadius.circular(10)),
-                      child: Row(mainAxisSize: MainAxisSize.min, children: [
-                        const Icon(Icons.monetization_on, size: 14, color: AppColors.yellow),
-                        const SizedBox(width: 4),
-                        Text(c.priceCoins == 0 ? 'Free' : '${c.priceCoins}',
-                            style: const TextStyle(color: Colors.white, fontSize: 12)),
-                      ]),
-                    ),
+                    _pricePill(),
                   ],
                 ),
                 const SizedBox(height: 2),
-                Text(c.description, style: const TextStyle(fontSize: 12, color: AppColors.muted)),
-                const SizedBox(height: 6),
-                Align(alignment: Alignment.centerRight, child: action),
+                Text(c.description,
+                    style: const TextStyle(fontSize: 12, height: 1.3, color: AppColors.muted)),
+                const SizedBox(height: 8),
+                Align(alignment: Alignment.centerRight, child: _action(context)),
               ],
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _pricePill() => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+        decoration: BoxDecoration(color: AppColors.navy, borderRadius: BorderRadius.circular(12)),
+        child: Row(mainAxisSize: MainAxisSize.min, children: [
+          Image.asset(
+            'assets/coin.png',
+            width: 14,
+            height: 14,
+            errorBuilder: (context, error, stackTrace) =>
+                const Icon(Icons.monetization_on, size: 14, color: AppColors.yellow),
+          ),
+          const SizedBox(width: 4),
+          Text(character.priceCoins == 0 ? 'Free' : '${character.priceCoins}',
+              style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700)),
+        ]),
+      );
+
+  /// Beli (belum dimiliki) -> Pakai (dimiliki) -> Dipakai (sedang aktif).
+  Widget _action(BuildContext context) {
+    const shape = StadiumBorder();
+    const label = TextStyle(fontSize: 13, fontWeight: FontWeight.w700);
+    if (character.isActive) {
+      return SizedBox(
+        width: 112,
+        height: 34,
+        child: OutlinedButton.icon(
+          onPressed: null,
+          icon: const Icon(Icons.check_rounded, size: 16),
+          label: const Text('Dipakai', style: label),
+          style: OutlinedButton.styleFrom(
+            shape: shape,
+            padding: EdgeInsets.zero,
+            disabledForegroundColor: AppColors.accent(context),
+            side: const BorderSide(color: Color(0xFFB8C8EE)),
+          ),
+        ),
+      );
+    }
+    final owned = character.isOwned;
+    return SizedBox(
+      width: 112,
+      height: 34,
+      child: FilledButton(
+        onPressed: busy ? null : (owned ? onUse : onBuy),
+        style: FilledButton.styleFrom(
+          shape: shape,
+          padding: EdgeInsets.zero,
+          backgroundColor: owned ? AppColors.green : AppColors.navy,
+          foregroundColor: Colors.white,
+        ),
+        child: Text(owned ? 'Pakai' : 'Beli', style: label),
       ),
     );
   }

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:quizin_app/core/theme/app_colors.dart';
 
-/// Daftar tab navigasi, dipakai bersama oleh nav bawah (HP) dan nav atas (web).
 const appNavItems = <(IconData, String)>[
   (Icons.home_rounded, 'Home'),
   (Icons.menu_book_rounded, 'Materi'),
@@ -10,7 +9,6 @@ const appNavItems = <(IconData, String)>[
   (Icons.person_rounded, 'Profil'),
 ];
 
-/// Navigasi bawah 5 tab: Home, Materi, Play (tengah), Progress, Profil.
 class AppBottomNav extends StatelessWidget {
   const AppBottomNav({super.key, required this.index, required this.onSelect});
 
@@ -27,8 +25,6 @@ class AppBottomNav extends StatelessWidget {
       ),
       child: SafeArea(
         top: false,
-        // Latar bilah selalu selebar layar; tab-nya dibatasi supaya tidak
-        // meregang di tablet.
         child: Align(
           alignment: Alignment.topCenter,
           heightFactor: 1,

@@ -1,101 +1,62 @@
 import 'package:flutter/material.dart';
 
-class MascotAccessory {
-  const MascotAccessory(
-    this.asset, {
-    this.alignment = Alignment.center,
-    this.scale = 1.0,
-  });
-
-  final String asset;
-  final Alignment alignment;
-
-  /// Lebar aksesori dibanding lebar maskot (1.0 = sama).
-  final double scale;
-}
-
+/// Maskot Quizin. Tanpa [characterId] tampil awan Nimbi transparan (dipakai
+/// layar login dan banner). Dengan [characterId] tampil gambar karakter
+/// utuh (kotak berujung bulat) dari aset karakter.
 class CloudMascot extends StatelessWidget {
-  const CloudMascot({
-    super.key,
-    this.size = 100,
-    this.accessoryId,
-    this.showBase = true,
-  });
+  const CloudMascot({super.key, this.size = 100, this.characterId, this.borderRadius});
 
   static const String baseAsset = 'assets/cloud_maskot.png';
 
-  /// Semua PNG maskot sudah di-crop rapat dengan rasio sama (760x462),
-  /// jadi aksesori tetap pas di kepala Nimbi.
+  /// Rasio gambar awan (sudah di-crop rapat).
   static const double aspect = 760 / 462;
 
-  /// Lebar kotak = size * [widthFactor]. Naikkan angka ini kalau mau Nimbi
-  /// tampil lebih besar di SEMUA tempat sekaligus.
+  /// Lebar awan = size * [widthFactor].
   static const double widthFactor = 1.25;
 
-  /// Ukuran & posisi aksesori. Kecilkan/besarkan lewat [scale] (1.0 = selebar
-  /// maskot). [alignment] menggeser aksesori: y negatif = naik ke kepala.
-  static const Map<int, MascotAccessory> accessories = {
-    2: MascotAccessory('assets/headphones.png',
-        alignment: Alignment(0, -0.5), scale: 0.72),
-    3: MascotAccessory('assets/crown.png',
-        alignment: Alignment(0, -1.08), scale: 0.48),
-    4: MascotAccessory('assets/graduation_cap.png',
-        alignment: Alignment(0, -1.16), scale: 0.5),
-    6: MascotAccessory('assets/wizard_hat.png',
-        alignment: Alignment(0, -1.16), scale: 0.5),
+  /// ID karakter (sama dengan data toko) -> file aset.
+  static const Map<int, String> characterAssets = {
+    1: 'assets/nimbi.png',
+    2: 'assets/sunny.png',
+    3: 'assets/minty.png',
+    4: 'assets/bluby.png',
+    5: 'assets/nova.png',
   };
 
   final double size;
 
-  /// ID item toko yang sedang dipakai. null / tidak dikenal = tanpa aksesori.
-  final int? accessoryId;
+  /// ID karakter. null / tidak dikenal = awan Nimbi transparan.
+  final int? characterId;
 
-  /// false = hanya aksesori, tanpa awan (dipakai di kartu toko).
-  /// Item tanpa aksesori (Nimbi) tetap menampilkan awan.
-  final bool showBase;
+  /// Radius sudut gambar karakter. Default 22% dari [size].
+  final double? borderRadius;
 
   @override
   Widget build(BuildContext context) {
-    final accessory = accessories[accessoryId];
-    final showCloud = showBase || accessory == null;
+    final asset = characterAssets[characterId];
+    if (asset != null) {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(borderRadius ?? size * 0.22),
+        child: Image.asset(
+          asset,
+          width: size,
+          height: size,
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) =>
+              SizedBox(width: size, height: size, child: const Icon(Icons.cloud, color: Color(0xFF8DB7F5))),
+        ),
+      );
+    }
 
     final w = size * widthFactor;
-    final h = w / aspect;
-
-    return SizedBox(
+    return Image.asset(
+      baseAsset,
       width: w,
-      height: h,
-      child: Stack(
-        alignment: Alignment.center,
-        clipBehavior: Clip.none,
-        children: [
-          if (showCloud)
-            Image.asset(
-              baseAsset,
-              width: w,
-              height: h,
-              fit: BoxFit.contain,
-              semanticLabel: 'Maskot awan Quizin',
-              errorBuilder: (context, error, stackTrace) => Icon(
-                Icons.cloud,
-                size: size,
-                color: const Color(0xFF8DB7F5),
-              ),
-            ),
-          if (accessory != null)
-            Align(
-              alignment: accessory.alignment,
-              child: Image.asset(
-                accessory.asset,
-                width: w * accessory.scale,
-                height: h * accessory.scale,
-                fit: BoxFit.contain,
-                errorBuilder: (context, error, stackTrace) =>
-                    const SizedBox.shrink(),
-              ),
-            ),
-        ],
-      ),
+      height: w / aspect,
+      fit: BoxFit.contain,
+      semanticLabel: 'Maskot awan Quizin',
+      errorBuilder: (context, error, stackTrace) =>
+          Icon(Icons.cloud, size: size, color: const Color(0xFF8DB7F5)),
     );
   }
 }

@@ -4,10 +4,14 @@ import 'package:quizin_app/core/navigation/shell_nav.dart';
 import 'package:quizin_app/core/routes/app_routes.dart';
 import 'package:quizin_app/core/theme/app_colors.dart';
 import 'package:quizin_app/core/utils/responsive.dart';
-import 'package:quizin_app/widgets/custom_app_bar.dart';
+import 'package:quizin_app/widgets/page_header.dart';
 import 'package:quizin_app/widgets/top_nav_bar.dart';
 
-/// Kerangka semua halaman: latar gradasi biru + judul (opsional) + isi.
+/// Kerangka semua halaman: judul (opsional) + isi.
+///
+/// * Bila [title] diisi, header yang dipakai selalu [PageHeader] (putih, judul di
+///   tengah) dan latar mengikuti halaman Materi/Kuis. Tanpa [title] (Home,
+///   layar perayaan), latar gradasi biru tetap dipakai.
 ///
 /// * Isi dipusatkan dan dibatasi [maxWidth], jadi tidak meregang di web.
 /// * Di layar lebar, halaman yang dibuka lewat Navigator.push (Toko, Peringkat,
@@ -51,32 +55,47 @@ class ScreenScaffold extends StatelessWidget {
           Expanded(
             child: Container(
               width: double.infinity,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: dark
-                      ? const [Color(0xFF1E3A8A), AppColors.darkBg]
-                      : const [AppColors.skyTop, Colors.white],
-                  stops: const [0, 0.55],
-                ),
-              ),
-              child: SafeArea(
-                top: !standaloneNav,
-                child: Align(
-                  alignment: Alignment.topCenter,
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(maxWidth: maxWidth),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        if (title != null)
-                          CustomAppBar(title: title!, showBack: showBack),
-                        Expanded(child: Padding(padding: padding, child: child)),
-                      ],
+              decoration: title != null
+                  ? BoxDecoration(
+                      color: dark ? AppColors.darkBg : null,
+                      gradient: dark
+                          ? null
+                          : const LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [AppColors.pageTop, Color(0xFFF8FAFF)],
+                            ),
+                    )
+                  : BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: dark
+                            ? const [Color(0xFF1E3A8A), AppColors.darkBg]
+                            : const [AppColors.skyTop, Colors.white],
+                        stops: const [0, 0.55],
+                      ),
+                    ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  if (title != null) PageHeader(title: title!, showBack: showBack),
+                  Expanded(
+                    child: SafeArea(
+                      top: title == null && !standaloneNav,
+                      child: Align(
+                        alignment: Alignment.topCenter,
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(maxWidth: maxWidth),
+                          child: Padding(
+                            padding: EdgeInsets.only(top: title != null ? 16 : 0),
+                            child: Padding(padding: padding, child: child),
+                          ),
+                        ),
+                      ),
                     ),
                   ),
-                ),
+                ],
               ),
             ),
           ),

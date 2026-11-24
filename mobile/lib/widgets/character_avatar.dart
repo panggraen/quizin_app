@@ -9,7 +9,7 @@ class CharacterAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) =>
-      CloudMascot(size: size, accessoryId: characterId);
+      CloudMascot(size: size, characterId: characterId);
 }
 
 class NimbiWidget extends StatelessWidget {

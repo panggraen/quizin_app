@@ -5,6 +5,10 @@ class AppColors {
   static const navy = Color(0xFF0B1F5B);
   static const primary = Color(0xFF1F5FD6);
   static const skyTop = Color(0xFF6F93D6);
+  /// Biru bagian atas Home (dipakai juga di Profil, Progress, dan halaman kuis).
+  static const headerTop = Color(0xFF2F74F5);
+  static const pageTop = Color(0xFFEFF5FF);
+  static const line = Color(0xFFD6E2F7);
   static const yellow = Color(0xFFFFC531);
   static const green = Color(0xFF2EBD6B);
   static const red = Color(0xFFE5231C);

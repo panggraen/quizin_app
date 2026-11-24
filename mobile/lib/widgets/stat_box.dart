@@ -23,7 +23,10 @@ class StatBox extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.surface(context),
         borderRadius: BorderRadius.circular(AppSizes.radius),
-        border: Border.all(color: Colors.black12),
+        border: Border.all(color: const Color(0xFFD6E2F7)),
+        boxShadow: const [
+          BoxShadow(color: Color(0x141F5FD6), blurRadius: 10, offset: Offset(0, 3)),
+        ],
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,

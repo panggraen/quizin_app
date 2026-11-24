@@ -7,12 +7,22 @@ class ProgressItemModel {
   /// 'material' | 'quiz'
   final String type;
 
-  const ProgressItemModel({required this.title, required this.subtitle, required this.type});
+  /// Waktu aktivitas (dipakai Daily Streak dan Aktivitas Terakhir di Home).
+  /// Opsional: backend lama yang belum mengirim `created_at` tetap jalan.
+  final DateTime? createdAt;
+
+  const ProgressItemModel({
+    required this.title,
+    required this.subtitle,
+    required this.type,
+    this.createdAt,
+  });
 
   factory ProgressItemModel.fromJson(Map<String, dynamic> j) => ProgressItemModel(
         title: j['title'] as String? ?? '',
         subtitle: j['subtitle'] as String? ?? '',
         type: j['type'] as String? ?? 'material',
+        createdAt: DateTime.tryParse(j['created_at'] as String? ?? '')?.toLocal(),
       );
 }
 

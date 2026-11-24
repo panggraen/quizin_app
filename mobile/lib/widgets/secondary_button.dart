@@ -19,7 +19,7 @@ class SecondaryButton extends StatelessWidget {
           foregroundColor: color,
           backgroundColor: AppColors.surface(context),
           side: BorderSide(color: onPressed == null ? Colors.grey : color),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: const StadiumBorder(),
         ),
         child: Text(label, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15)),
       ),

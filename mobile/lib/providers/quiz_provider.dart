@@ -12,6 +12,9 @@ class QuizProvider extends ChangeNotifier {
   int index = 0;
   int? selectedOptionId;
   AnswerResultModel? lastResult;
+
+  /// Hasil tiap soal pada sesi ini: true = benar, false = salah, null = belum dijawab.
+  List<bool?> outcomes = [];
   AttemptResultModel? result;
   bool submitting = false;
   String? error;
@@ -24,6 +27,7 @@ class QuizProvider extends ChangeNotifier {
 
   Future<void> start(int moduleId) async {
     attempt = await _service.startAttempt(moduleId);
+    outcomes = List<bool?>.filled(attempt!.questions.length, null);
     index = 0;
     selectedOptionId = null;
     lastResult = null;
@@ -41,6 +45,7 @@ class QuizProvider extends ChangeNotifier {
     notifyListeners();
     try {
       lastResult = await _service.submitAnswer(attempt!.attemptId, currentQuestion.id, optionId);
+      outcomes[index] = lastResult!.isCorrect;
       return true;
     } catch (e) {
       selectedOptionId = null;
