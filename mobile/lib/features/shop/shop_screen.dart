@@ -42,20 +42,13 @@ class _ShopScreenState extends State<ShopScreen> {
     }
   }
 
-  /// Lepas aksesori = pakai kembali item bawaan (maskot tanpa aksesori).
-  Future<void> _unequip(ShopProvider shop, CharacterModel c) {
-    final defaults = shop.characters.where((x) => x.isDefault);
-    if (defaults.isEmpty) return Future.value();
-    return _run(() => shop.use(defaults.first.id), '${c.name} dilepas.');
-  }
-
   @override
   Widget build(BuildContext context) {
     final shop = context.watch<ShopProvider>();
     final user = context.watch<ProfileProvider>().user;
     final coins = user?.coins;
     return ScreenScaffold(
-      title: 'Toko',
+      title: 'Toko Karakter',
       maxWidth: _maxWidth,
       child: shop.loading && shop.characters.isEmpty
           ? const LoadingWidget()
@@ -70,7 +63,6 @@ class _ShopScreenState extends State<ShopScreen> {
                               () => shop.buy(ch.id), '${ch.name} berhasil dibeli.'),
                           onUse: () => _run(() => shop.use(ch.id),
                               '${ch.name} sekarang dipakai.'),
-                          onUnequip: () => _unequip(shop, ch),
                         );
 
                     return ListView(
@@ -79,8 +71,8 @@ class _ShopScreenState extends State<ShopScreen> {
                         Container(
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
-                            gradient: const LinearGradient(colors: [AppColors.primary, Color(0xFF3B82F6)]),
-                            borderRadius: BorderRadius.circular(16),
+                            gradient: const LinearGradient(colors: [AppColors.headerTop, AppColors.primary]),
+                            borderRadius: BorderRadius.circular(20),
                           ),
                           child: Row(
                             children: [
@@ -90,19 +82,19 @@ class _ShopScreenState extends State<ShopScreen> {
                                   children: [
                                     const Text('Saldo Koinmu', style: TextStyle(color: Colors.white)),
                                     Row(children: [
-                                      const Icon(Icons.monetization_on, color: AppColors.yellow, size: 28),
+                                      Image.asset('assets/coin.png', width: 28, height: 28),
                                       const SizedBox(width: 6),
                                       Text('${coins ?? '-'}',
                                           style: const TextStyle(
                                               color: Colors.white, fontSize: 30, fontWeight: FontWeight.w800)),
                                     ]),
                                     const SizedBox(height: 4),
-                                    const Text('Dapatkan koin dari jawaban benar untuk membeli aksesori.',
+                                    const Text('Dapatkan koin dari jawaban benar untuk membeli karakter.',
                                         style: TextStyle(color: Colors.white70, fontSize: 11)),
                                   ],
                                 ),
                               ),
-                              CloudMascot(size: 80, accessoryId: user?.activeCharacterId),
+                              const CloudMascot(size: 80),
                             ],
                           ),
                         ),

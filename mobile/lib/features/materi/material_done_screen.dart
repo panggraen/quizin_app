@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:quizin_app/core/routes/app_routes.dart';
 import 'package:quizin_app/core/theme/app_colors.dart';
 import 'package:quizin_app/widgets/primary_button.dart';
+import 'package:quizin_app/widgets/reward_tile.dart';
 import 'package:quizin_app/widgets/screen_scaffold.dart';
 import 'package:quizin_app/widgets/secondary_button.dart';
-import 'package:quizin_app/widgets/stat_box.dart';
 
 class MaterialDoneScreen extends StatelessWidget {
   const MaterialDoneScreen({super.key, required this.xpAwarded});
@@ -13,26 +13,29 @@ class MaterialDoneScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Respons penyelesaian materi hanya membawa XP (tanpa koin), jadi hanya XP yang tampil.
     return ScreenScaffold(
-      child: Column(
+      title: 'Materi Selesai',
+      showBack: false,
+      child: ListView(
+        padding: const EdgeInsets.only(bottom: 24),
         children: [
-          const Spacer(),
-          const Icon(Icons.emoji_events, size: 120, color: AppColors.yellow),
-          const SizedBox(height: 8),
-          Text('Materi Selesai!',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800, color: AppColors.accent(context))),
-          const SizedBox(height: 16),
-          SizedBox(
-            width: 140,
-            child: StatBox(value: '+$xpAwarded', label: 'Poin XP', icon: Icons.bolt),
+          Image.asset('assets/completed.png', height: 220, fit: BoxFit.contain),
+          const SizedBox(height: 12),
+          Center(
+            child: SizedBox(
+              width: 200,
+              child: RewardTile(icon: RewardTile.xpIcon, value: '+$xpAwarded', label: 'Poin XP'),
+            ),
           ),
           if (xpAwarded == 0)
             const Padding(
               padding: EdgeInsets.only(top: 8),
               child: Text('XP materi hanya diberikan sekali.',
+                  textAlign: TextAlign.center,
                   style: TextStyle(fontSize: 12, color: AppColors.muted)),
             ),
-          const Spacer(),
+          const SizedBox(height: 24),
           PrimaryButton(label: 'Lihat Materi Lain', onPressed: () => Navigator.of(context).pop()),
           const SizedBox(height: 10),
           SecondaryButton(
@@ -40,7 +43,6 @@ class MaterialDoneScreen extends StatelessWidget {
             onPressed: () => Navigator.of(context)
                 .pushNamedAndRemoveUntil(AppRoutes.main, (route) => false),
           ),
-          const SizedBox(height: 24),
         ],
       ),
     );

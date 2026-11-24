@@ -11,10 +11,6 @@ import 'package:quizin_app/providers/profile_provider.dart';
 import 'package:quizin_app/widgets/bottom_nav_bar.dart';
 import 'package:quizin_app/widgets/top_nav_bar.dart';
 
-/// Kerangka utama setelah login.
-///
-/// Layar lebar (web / desktop): navigasi horizontal di ATAS, konten di bawahnya
-/// dengan lebar maksimal. HP: navigasi bawah.
 class MainShell extends StatefulWidget {
   const MainShell({super.key});
 

@@ -9,6 +9,7 @@ import 'package:quizin_app/providers/profile_provider.dart';
 import 'package:quizin_app/providers/quiz_provider.dart';
 import 'package:quizin_app/providers/settings_provider.dart';
 import 'package:quizin_app/providers/shop_provider.dart';
+import 'package:quizin_app/providers/streak_provider.dart';
 import 'package:quizin_app/services/mock/mock_backend.dart';
 
 class QuizinApp extends StatelessWidget {
@@ -26,6 +27,10 @@ class QuizinApp extends StatelessWidget {
         ChangeNotifierProvider(create: (c) => MaterialProvider(c.read<MockBackend>())),
         ChangeNotifierProvider(create: (c) => QuizProvider(c.read<MockBackend>())),
         ChangeNotifierProvider(create: (c) => ShopProvider(c.read<MockBackend>())),
+        // Daily Streak: sengaja tanpa layanan. Backend check-in belum ada dan
+        // MockBackend tidak boleh mengarang streak. Saat endpoint siap, ganti
+        // dengan StreakProvider(ApiStreakService()).
+        ChangeNotifierProvider(create: (_) => StreakProvider()),
         ChangeNotifierProvider(create: (_) => SettingsProvider()),
         ChangeNotifierProvider(create: (_) => ShellNav()),
       ],

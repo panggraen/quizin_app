@@ -81,9 +81,10 @@ class MockBackend
   static const int materialXp = 15; // keputusan tim: 15 XP per materi (pertama kali)
   static const int xpPerCorrect = 10;
   static const int coinsPerCorrect = 1;
-  // Contoh: tiap materi punya 6 modul, jadi Biologi (2 materi) = modul 1..12.
+  // Setiap bidang punya tepat 10 modul (peta jalur), berapa pun jumlah materinya.
   // ID modul = subjectId * 100 + nomor modul (nomor urut sepanjang bidang).
-  static const int _modulesPerMaterial = 6;
+  // Modul dibagi rata ke materi yang ada di bidang tersebut.
+  static const int modulesPerSubject = 10;
 
   static const List<({int id, String name})> _categories = [
     (id: 1, name: 'IPA'),
@@ -162,10 +163,10 @@ class MockBackend
 
   static const List<({int id, String name, String description, int price})> _characters = [
     (id: 1, name: 'Nimbi', description: 'Maskot awan tanpa aksesori.', price: 0),
-    (id: 2, name: 'Headphone', description: 'Belajar sambil dengar musik favorit.', price: 150),
-    (id: 3, name: 'Mahkota', description: 'Untuk raja dan ratu kuis.', price: 500),
-    (id: 4, name: 'Topi Wisuda', description: 'Tampil cerdas seperti lulusan terbaik.', price: 250),
-    (id: 6, name: 'Topi Penyihir', description: 'Sihir pengetahuan di kepalamu.', price: 300),
+    (id: 2, name: 'Sunny', description: 'Awan ceria dengan sinar matahari.', price: 200),
+    (id: 3, name: 'Minty', description: 'Awan segar yang penuh semangat.', price: 250),
+    (id: 4, name: 'Bluby', description: 'Awan tenang dengan nuansa malam.', price: 300),
+    (id: 5, name: 'Nova', description: 'Awan bintang yang penuh imajinasi.', price: 500),
   ];
 
   static const List<({int id, String name, String description, int need})> _badges = [
@@ -438,11 +439,11 @@ class MockBackend
   List<({int id, int subjectId, String title, String content})> _materialsOf(int subjectId) =>
       _materials.where((m) => m.subjectId == subjectId).toList();
 
-  int _moduleCount(int subjectId) => _materialsOf(subjectId).length * _modulesPerMaterial;
+  int _moduleCount(int subjectId) => modulesPerSubject;
 
   ({int id, int subjectId, String title, String content}) _materialOfModule(int moduleId) {
     final mats = _materialsOf(moduleId ~/ 100);
-    return mats[((moduleId % 100) - 1) ~/ _modulesPerMaterial];
+    return mats[(((moduleId % 100) - 1) * mats.length) ~/ modulesPerSubject];
   }
 
   String _subjectPath(int subjectId) {

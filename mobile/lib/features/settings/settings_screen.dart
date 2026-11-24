@@ -6,6 +6,7 @@ import 'package:quizin_app/core/utils/helpers.dart';
 import 'package:quizin_app/providers/auth_provider.dart';
 import 'package:quizin_app/providers/profile_provider.dart';
 import 'package:quizin_app/providers/settings_provider.dart';
+import 'package:quizin_app/providers/streak_provider.dart';
 import 'package:quizin_app/widgets/primary_button.dart';
 import 'package:quizin_app/widgets/screen_scaffold.dart';
 
@@ -26,10 +27,12 @@ class SettingsScreen extends StatelessWidget {
     );
     if (sure != true || !context.mounted) return;
     final profile = context.read<ProfileProvider>();
+    final streak = context.read<StreakProvider>();
     final navigator = Navigator.of(context);
     try {
       await context.read<AuthProvider>().logout();
       profile.clear();
+      streak.clear();
       navigator.pushNamedAndRemoveUntil(AppRoutes.login, (route) => false);
     } catch (_) {
       if (context.mounted) showMessage(context, 'Gagal keluar. Coba lagi.');
