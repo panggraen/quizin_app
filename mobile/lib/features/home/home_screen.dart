@@ -227,7 +227,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         _streakCard(items),
                         const SizedBox(height: 14),
                         Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
                           child: _playBanner(),
                         ),
                         const SizedBox(height: 14),

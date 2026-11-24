@@ -1,22 +1,38 @@
 import 'package:flutter/material.dart';
 import 'package:quizin_app/core/theme/app_colors.dart';
 
-/// Kartu hadiah: ikon di kotak biru muda, nilai besar, lalu label.
+/// Kartu hadiah: ikon aset besar di kiri, nilai dan label di kanan.
 class RewardTile extends StatelessWidget {
-  const RewardTile({super.key, required this.icon, required this.value, required this.label});
+  const RewardTile({
+    super.key,
+    required this.icon,
+    required this.value,
+    required this.label,
+    this.tint,
+  });
 
   final Widget icon;
   final String value;
   final String label;
 
-  /// Ikon XP (petir) dan koin, dipakai bersama oleh halaman hasil.
-  static const Widget xpIcon = Icon(Icons.bolt_rounded, size: 30, color: AppColors.yellow);
-  static final Widget coinIcon = Image.asset(
-    'assets/coin.png',
-    width: 28,
-    height: 28,
+  /// Warna latar kartu (mode terang). null = warna permukaan biasa.
+  final Color? tint;
+
+  static const Color xpTint = Color(0xFFEAF3FF);
+  static const Color coinTint = Color(0xFFFFF6E3);
+
+  /// Ikon XP (`assets/light.png`) dan koin (`assets/koin.png`).
+  static final Widget xpIcon = Image.asset(
+    'assets/light.png',
+    height: 44,
     errorBuilder: (context, error, stackTrace) =>
-        const Icon(Icons.monetization_on, size: 28, color: AppColors.yellow),
+        const Icon(Icons.bolt_rounded, size: 40, color: AppColors.yellow),
+  );
+  static final Widget coinIcon = Image.asset(
+    'assets/koin.png',
+    height: 44,
+    errorBuilder: (context, error, stackTrace) =>
+        const Icon(Icons.monetization_on, size: 40, color: AppColors.yellow),
   );
 
   @override
@@ -25,23 +41,14 @@ class RewardTile extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        color: AppColors.surface(context),
+        color: dark ? AppColors.surface(context) : (tint ?? AppColors.surface(context)),
         borderRadius: BorderRadius.circular(18),
         border: Border.all(color: AppColors.line),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Container(
-            width: 48,
-            height: 48,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: dark ? const Color(0xFF223463) : const Color(0xFFE3EEFF),
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: icon,
-          ),
+          icon,
           const SizedBox(width: 12),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -49,8 +56,8 @@ class RewardTile extends StatelessWidget {
             children: [
               Text(value,
                   style: TextStyle(
-                      fontSize: 22, fontWeight: FontWeight.w800, color: AppColors.accent(context))),
-              Text(label, style: const TextStyle(fontSize: 12, color: AppColors.muted)),
+                      fontSize: 24, fontWeight: FontWeight.w800, color: AppColors.accent(context))),
+              Text(label, style: const TextStyle(fontSize: 13, color: AppColors.muted)),
             ],
           ),
         ],

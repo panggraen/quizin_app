@@ -94,7 +94,7 @@ class _ShopScreenState extends State<ShopScreen> {
                                   ],
                                 ),
                               ),
-                              const CloudMascot(size: 80),
+                              CloudMascot(size: 72, characterId: user?.activeCharacterId),
                             ],
                           ),
                         ),

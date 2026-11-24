@@ -77,6 +77,7 @@ class ScreenScaffold extends StatelessWidget {
                       ),
                     ),
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   if (title != null) PageHeader(title: title!, showBack: showBack),
                   Expanded(

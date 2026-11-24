@@ -111,6 +111,7 @@ class QuizPlayScreen extends StatelessWidget {
                       _Segments(outcomes: quiz.outcomes, current: quiz.index),
                       const SizedBox(height: 18),
                       Container(
+                        margin: const EdgeInsets.symmetric(horizontal: 12),
                         padding: const EdgeInsets.fromLTRB(16, 22, 16, 18),
                         decoration: BoxDecoration(
                           color: AppColors.surface(context),
@@ -156,23 +157,6 @@ class QuizPlayScreen extends StatelessWidget {
                               onPressed: answered ? () => _next(context) : null,
                             ),
                           ],
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      Center(
-                        child: SizedBox(
-                          width: 150,
-                          height: 42,
-                          child: FilledButton(
-                            onPressed: leave,
-                            style: FilledButton.styleFrom(
-                              backgroundColor: dark ? AppColors.darkSurface : const Color(0xFFE1E7F3),
-                              foregroundColor: AppColors.accent(context),
-                              shape: const StadiumBorder(),
-                            ),
-                            child: const Text('Keluar',
-                                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
-                          ),
                         ),
                       ),
                     ],

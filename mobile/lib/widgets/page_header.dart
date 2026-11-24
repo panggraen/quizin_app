@@ -17,6 +17,7 @@ class PageHeader extends StatelessWidget {
     final topInset = MediaQuery.paddingOf(context).top;
     return Container(
       padding: EdgeInsets.fromLTRB(16, topInset + 8, 16, 10),
+      width: double.infinity,
       decoration: BoxDecoration(
         color: dark ? AppColors.darkBg : Colors.white,
         border: const Border(bottom: BorderSide(color: _line, width: 1.5)),
